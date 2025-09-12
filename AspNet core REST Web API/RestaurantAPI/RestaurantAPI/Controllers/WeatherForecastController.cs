@@ -6,28 +6,40 @@ namespace RestaurantAPI.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        private readonly IWeatherForecastService service;
+        private readonly ILogger<WeatherForecastController> logger;
 
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IWeatherForecastService service)
         {
-            _logger = logger;
+            this.logger = logger;
+            this.service = service;
         }
 
         [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            var result = service.Get();
+
+            return result;
+        }
+
+        [HttpGet("currentDay/{max}")]
+        public IEnumerable<WeatherForecast> Get2([FromQuery] int take, [FromRoute] int max)
+        {
+            var result = service.Get();
+
+            return result;
+        }
+
+        [HttpPost]
+        public ActionResult<string> Hello([FromBody] string name)
+        {
+            if (string.IsNullOrEmpty(name))
             {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+                return StatusCode(404);
+            }
+
+            return Ok($"Hello {name}");
         }
     }
 }
