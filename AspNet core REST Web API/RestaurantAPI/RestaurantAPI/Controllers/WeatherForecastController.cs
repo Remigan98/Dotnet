@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Collections;
 
 namespace RestaurantAPI.Controllers
 {
@@ -23,13 +24,48 @@ namespace RestaurantAPI.Controllers
             return result;
         }
 
-        [HttpGet("currentDay/{max}")]
-        public IEnumerable<WeatherForecast> Get2([FromQuery] int take, [FromRoute] int max)
+        [HttpGet("currentDay/{minTemperature}/{maxTemperature}")]
+        public IEnumerable<WeatherForecast> Get2([FromQuery] int take, [FromRoute] int minTemperature ,[FromRoute] int maxTemperature)
         {
-            var result = service.Get();
+            IEnumerable<WeatherForecast> result = service.Get();
+
+            result = result.Where(x => x.TemperatureC >= minTemperature && x.TemperatureC <= maxTemperature).Take(take);
 
             return result;
         }
+
+        public struct GenerateForecastRequest
+        {
+            public required int MinTemperature { get; set; }
+            public required int MaxTemperature { get; set; }
+        }
+
+        [HttpPost("GenerateResults/{generatedResultAmount}")]
+        public ActionResult<IEnumerable<WeatherForecast>> GenerateForecast([FromRoute] int generatedResultAmount, [FromBody] GenerateForecastRequest forecastRequest)
+        {
+            List<WeatherForecast> result = new List<WeatherForecast>();
+
+            if (forecastRequest.MinTemperature > forecastRequest.MaxTemperature || generatedResultAmount <= 0)
+            {
+                return BadRequest();
+            }
+
+            Random random = new Random();
+
+            for (int i = 0; i < generatedResultAmount; i++)
+            {
+                var temperatureC = random.Next(forecastRequest.MinTemperature, forecastRequest.MaxTemperature + 1);
+
+                result.Add(new WeatherForecast
+                {
+                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(i)),
+                    TemperatureC = temperatureC,
+                    Summary = "Generated"
+                });
+            }
+
+            return result;
+        }  
 
         [HttpPost]
         public ActionResult<string> Hello([FromBody] string name)
