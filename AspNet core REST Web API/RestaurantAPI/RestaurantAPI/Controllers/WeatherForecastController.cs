@@ -5,7 +5,7 @@ namespace RestaurantAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    public partial class WeatherForecastController : ControllerBase
     {
         private readonly IWeatherForecastService service;
         private readonly ILogger<WeatherForecastController> logger;
@@ -19,7 +19,7 @@ namespace RestaurantAPI.Controllers
         [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
-            var result = service.Get();
+            var result = service.Get(6, -15, 50);
 
             return result;
         }
@@ -27,44 +27,22 @@ namespace RestaurantAPI.Controllers
         [HttpGet("currentDay/{minTemperature}/{maxTemperature}")]
         public IEnumerable<WeatherForecast> Get2([FromQuery] int take, [FromRoute] int minTemperature ,[FromRoute] int maxTemperature)
         {
-            IEnumerable<WeatherForecast> result = service.Get();
-
-            result = result.Where(x => x.TemperatureC >= minTemperature && x.TemperatureC <= maxTemperature).Take(take);
+            IEnumerable<WeatherForecast> result = service.Get(take, minTemperature, maxTemperature);
 
             return result;
         }
 
-        public struct GenerateForecastRequest
+        [HttpPost("GenerateResults/{count}")]
+        public ActionResult<IEnumerable<WeatherForecast>> GenerateForecast([FromRoute] int count, [FromBody] GenerateForecastRequest request)
         {
-            public required int MinTemperature { get; set; }
-            public required int MaxTemperature { get; set; }
-        }
-
-        [HttpPost("GenerateResults/{generatedResultAmount}")]
-        public ActionResult<IEnumerable<WeatherForecast>> GenerateForecast([FromRoute] int generatedResultAmount, [FromBody] GenerateForecastRequest forecastRequest)
-        {
-            List<WeatherForecast> result = new List<WeatherForecast>();
-
-            if (forecastRequest.MinTemperature > forecastRequest.MaxTemperature || generatedResultAmount <= 0)
+            if (request.MinTemperature > request.MaxTemperature || count <= 0)
             {
                 return BadRequest();
             }
 
-            Random random = new Random();
+            var result = service.Get(count, request.MinTemperature, request.MaxTemperature);
 
-            for (int i = 0; i < generatedResultAmount; i++)
-            {
-                var temperatureC = random.Next(forecastRequest.MinTemperature, forecastRequest.MaxTemperature + 1);
-
-                result.Add(new WeatherForecast
-                {
-                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(i)),
-                    TemperatureC = temperatureC,
-                    Summary = "Generated"
-                });
-            }
-
-            return result;
+            return Ok(result);
         }  
 
         [HttpPost]
