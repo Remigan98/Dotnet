@@ -16,6 +16,23 @@ namespace RestaurantAPI.Controllers
             this.dbContext = dbContext;
         }
 
+        [HttpPost]
+        [Route("Create")]
+        public ActionResult Create([FromBody] CreateRestaurantDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            Restaurant restaurant = dto.ToEntity();
+
+            dbContext.Restaurants.Add(restaurant);
+            dbContext.SaveChanges();
+
+            return Created($"/api/restaurant/{restaurant.Id}", null);
+        }
+
         [HttpGet]
         [Route("GetAll")]
         public ActionResult<IEnumerable<RestaurantDto>> GetAll()

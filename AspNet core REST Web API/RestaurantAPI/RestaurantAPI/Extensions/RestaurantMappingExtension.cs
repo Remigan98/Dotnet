@@ -58,4 +58,23 @@ public static class RestaurantMappingExtension
             }).ToList()
         };
     }
+
+    public static Restaurant ToEntity(this CreateRestaurantDto createRestaurant)
+    {
+        return new Restaurant
+        {
+            Name = createRestaurant.Name,
+            Description = createRestaurant.Description,
+            Category = createRestaurant.Category,
+            HasDelivery = createRestaurant.HasDelivery,
+            ContactEmail = createRestaurant.ContactEmail,
+            ContactNumber = createRestaurant.ContactNumber,
+            Address = new Address
+            {
+                City = createRestaurant.City,
+                Street = createRestaurant.Street,
+                PostalCode = createRestaurant.PostalCode
+            }
+        };
+    }
 }
