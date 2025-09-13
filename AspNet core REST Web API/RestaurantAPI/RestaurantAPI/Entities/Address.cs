@@ -3,9 +3,9 @@
     public class Address
     {
         public int Id { get; set; }
-        public string City { get; set; }
-        public string Street { get; set; }
-        public string PostalCode { get; set; }
+        public required string City { get; set; }
+        public required string Street { get; set; }
+        public required string PostalCode { get; set; }
 
         public virtual Restaurant Restaurant { get; set; }
     }
