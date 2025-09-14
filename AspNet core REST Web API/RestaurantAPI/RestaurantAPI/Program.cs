@@ -1,10 +1,12 @@
 using RestaurantAPI;
 using RestaurantAPI.Entities;
+using RestaurantAPI.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<RestaurantDbContext>();
 builder.Services.AddScoped<RestaurantSeeder>();

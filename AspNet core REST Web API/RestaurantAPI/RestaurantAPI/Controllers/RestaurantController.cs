@@ -3,68 +3,79 @@ using Microsoft.EntityFrameworkCore;
 using RestaurantAPI.Entities;
 using RestaurantAPI.Models;
 using RestaurantAPI.Extensions;
+using RestaurantAPI.Services;
 
-namespace RestaurantAPI.Controllers
+namespace RestaurantAPI.Controllers;
+
+[Route("api/restaurant")]
+public class RestaurantController : ControllerBase
 {
-    [Route("api/restaurant")]
-    public class RestaurantController : ControllerBase
+    RestaurantDbContext dbContext;
+    IRestaurantService restaurantService;
+
+    public RestaurantController(RestaurantDbContext dbContext, IRestaurantService restaurantService)
     {
-        RestaurantDbContext dbContext;
+        this.dbContext = dbContext;
+        this.restaurantService = restaurantService;
+    }
 
-        public RestaurantController(RestaurantDbContext dbContext)
+    [HttpPost("Create")]
+    public ActionResult Create([FromBody] CreateRestaurantDto dto)
+    {
+        if (ModelState.IsValid == false)
         {
-            this.dbContext = dbContext;
+            return BadRequest(ModelState);
         }
 
-        [HttpPost]
-        [Route("Create")]
-        public ActionResult Create([FromBody] CreateRestaurantDto dto)
+        int id = restaurantService.Create(dto);
+
+        return Created($"/api/restaurant/{id}", null);
+    }
+
+    [HttpPut("{id}")]
+    public ActionResult Update([FromBody] UpdateRestaurantDto dto, [FromRoute] int id)
+    {
+        if (ModelState.IsValid == false)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            Restaurant restaurant = dto.ToEntity();
-
-            dbContext.Restaurants.Add(restaurant);
-            dbContext.SaveChanges();
-
-            return Created($"/api/restaurant/{restaurant.Id}", null);
+            return BadRequest(ModelState);
         }
 
-        [HttpGet]
-        [Route("GetAll")]
-        public ActionResult<IEnumerable<RestaurantDto>> GetAll()
+        bool isUpdated = restaurantService.Update(id, dto);
+
+        if (!isUpdated)
         {
-            List<Restaurant> restaurants = dbContext
-                .Restaurants
-                .Include(r => r.Address)
-                .Include(r => r.Dishes).ToList();
-
-            List<RestaurantDto> restaurantDtos = restaurants.ToDto();
-
-            return Ok(restaurantDtos);
+            return NotFound();
         }
 
-        [HttpGet]
-        [Route("{id}")]
-        public ActionResult<RestaurantDto> Get([FromRoute] int id)
+        return Ok();
+    }
+
+    [HttpGet("GetAll")]
+    public ActionResult<IEnumerable<RestaurantDto>> GetAll()
+    {
+        return Ok(restaurantService.GetAll());
+    }
+
+    [HttpGet]
+    [Route("{id}")]
+    public ActionResult<RestaurantDto> Get([FromRoute] int id)
+    {
+        RestaurantDto? restaurantDto = this.restaurantService.GetById(id);
+
+        if (restaurantDto is null)
         {
-            Restaurant? restaurant = dbContext
-                .Restaurants
-                .Include(r => r.Address)
-                .Include(r => r.Dishes)
-                .FirstOrDefault(r => r.Id == id);
-
-            if (restaurant is null)
-            {
-                return NotFound();
-            }
-
-            RestaurantDto restaurantDto = restaurant.ToDto();
-
-            return Ok(restaurantDto);
+            return NotFound();
         }
+
+        return Ok(restaurantDto);
+    }
+
+    [HttpDelete("{id}")]
+    public ActionResult Delete([FromRoute] int id)
+    {
+        bool isDeleted = restaurantService.Delete(id);
+
+        return isDeleted ? NoContent() : NotFound();
     }
 }
+
