@@ -8,25 +8,19 @@ using RestaurantAPI.Services;
 namespace RestaurantAPI.Controllers;
 
 [Route("api/restaurant")]
+[ApiController]
 public class RestaurantController : ControllerBase
 {
-    RestaurantDbContext dbContext;
     IRestaurantService restaurantService;
 
-    public RestaurantController(RestaurantDbContext dbContext, IRestaurantService restaurantService)
+    public RestaurantController(IRestaurantService restaurantService)
     {
-        this.dbContext = dbContext;
         this.restaurantService = restaurantService;
     }
 
     [HttpPost("Create")]
     public ActionResult Create([FromBody] CreateRestaurantDto dto)
     {
-        if (ModelState.IsValid == false)
-        {
-            return BadRequest(ModelState);
-        }
-
         int id = restaurantService.Create(dto);
 
         return Created($"/api/restaurant/{id}", null);
@@ -35,17 +29,7 @@ public class RestaurantController : ControllerBase
     [HttpPut("{id}")]
     public ActionResult Update([FromBody] UpdateRestaurantDto dto, [FromRoute] int id)
     {
-        if (ModelState.IsValid == false)
-        {
-            return BadRequest(ModelState);
-        }
-
-        bool isUpdated = restaurantService.Update(id, dto);
-
-        if (!isUpdated)
-        {
-            return NotFound();
-        }
+        restaurantService.Update(id, dto);
 
         return Ok();
     }
@@ -60,12 +44,7 @@ public class RestaurantController : ControllerBase
     [Route("{id}")]
     public ActionResult<RestaurantDto> Get([FromRoute] int id)
     {
-        RestaurantDto? restaurantDto = this.restaurantService.GetById(id);
-
-        if (restaurantDto is null)
-        {
-            return NotFound();
-        }
+        RestaurantDto restaurantDto = this.restaurantService.GetById(id);
 
         return Ok(restaurantDto);
     }
@@ -73,9 +52,9 @@ public class RestaurantController : ControllerBase
     [HttpDelete("{id}")]
     public ActionResult Delete([FromRoute] int id)
     {
-        bool isDeleted = restaurantService.Delete(id);
+        restaurantService.Delete(id);
 
-        return isDeleted ? NoContent() : NotFound();
+        return NoContent();
     }
 }
 
