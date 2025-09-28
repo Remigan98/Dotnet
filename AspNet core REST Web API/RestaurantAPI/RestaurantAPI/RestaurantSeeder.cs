@@ -1,4 +1,5 @@
 ﻿using RestaurantAPI.Entities;
+using System.Collections;
 
 namespace RestaurantAPI
 {
@@ -15,14 +16,34 @@ namespace RestaurantAPI
         {
             if (dbContext.Database.CanConnect())
             {
+                if (dbContext.Roles.Any() == false)
+                {
+                    IEnumerable<Role> roles = GetRoles();
+
+                    dbContext.Roles.AddRange(roles);
+                    dbContext.SaveChanges();
+                }
+
                 if (dbContext.Restaurants.Any() == false)
                 {
-                    var restaurants = GetRestaurants();
+                    IEnumerable<Restaurant> restaurants = GetRestaurants();
 
                     dbContext.Restaurants.AddRange(restaurants);
                     dbContext.SaveChanges();
                 }
             }
+        }
+
+        private IEnumerable<Role> GetRoles()
+        {
+            List<Role> roles = new List<Role>()
+            {
+                new Role() { Name = "User" },
+                new Role() { Name = "Manager" },
+                new Role() { Name = "Admin" },
+            };
+
+            return roles;
         }
 
         private IEnumerable<Restaurant> GetRestaurants()

@@ -1,8 +1,12 @@
+using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using NLog.Web;
 using RestaurantAPI;
 using RestaurantAPI.Entities;
-using RestaurantAPI.Services;
 using RestaurantAPI.Middleware;
+using RestaurantAPI.Models;
+using RestaurantAPI.Models.Validators;
+using RestaurantAPI.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -15,11 +19,15 @@ builder.Host.UseNLog();
 #region Services 
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 builder.Services.AddScoped<IDishService, DishService>();
-builder.Services.AddControllers();
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddDbContext<RestaurantDbContext>();
 builder.Services.AddScoped<RestaurantSeeder>();
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddScoped<RequestTimeMiddleware>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
+builder.Services.AddScoped<RestaurantAPI.Filters.ValidationFilter>();
+builder.Services.AddControllers(o => o.Filters.Add<RestaurantAPI.Filters.ValidationFilter>());
 builder.Services.AddSwaggerGen();
 #endregion
 
