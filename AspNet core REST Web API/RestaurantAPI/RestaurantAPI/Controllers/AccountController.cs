@@ -25,5 +25,12 @@ namespace RestaurantAPI.Controllers
             await accountService.RegisterUserAsync(dto, cancellationToken);
             return Ok();
         }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<string>> Login([FromBody] LoginDto dto, CancellationToken cancellationToken)
+        {
+            string token = await accountService.GenerateJwtAsync(dto, cancellationToken);
+            return Ok(token);
+        }
     }
 }

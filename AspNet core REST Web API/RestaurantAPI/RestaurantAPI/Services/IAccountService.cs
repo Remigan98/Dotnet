@@ -7,5 +7,6 @@ namespace RestaurantAPI.Services
     public interface IAccountService
     {
         Task RegisterUserAsync(RegisterUserDto dto, CancellationToken cancellationToken = default);
+        Task<string> GenerateJwtAsync(LoginDto dto, CancellationToken cancellationToken = default);
     }
 }

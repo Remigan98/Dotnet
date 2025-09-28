@@ -44,7 +44,7 @@ public class RestaurantService : IRestaurantService
 
     public RestaurantDto GetById(int id)
     {
-        Restaurant restaurant = dbContext
+        Restaurant? restaurant = dbContext
             .Restaurants
             .Include(r => r.Address)
             .Include(r => r.Dishes)
