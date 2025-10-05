@@ -27,6 +27,11 @@ public class ErrorHandlingMiddleware : IMiddleware
             context.Response.StatusCode = 404;
             await context.Response.WriteAsJsonAsync(new { Error = notFoundException.Message });
         }
+        catch (ForbidException forbidException)
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsJsonAsync(new { Error = forbidException.Message });
+        }
         catch (Exception exception)
         {
             logger.LogError(exception, exception.Message);

@@ -7,6 +7,8 @@ using RestaurantAPI.Middleware;
 using RestaurantAPI.Models;
 using RestaurantAPI.Models.Validators;
 using RestaurantAPI.Services;
+using RestaurantAPI.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -36,8 +38,15 @@ builder.Services.AddAuthentication(option =>
         IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(authenticationSettings.JwtKey)),
     };
 });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("HasNationality", policy => policy.RequireClaim("Nationality"));
+    options.AddPolicy("AtLeast20", policy => policy.Requirements.Add(new MinimumAgeRequirement(20)));
+});
 
 #region Services 
+builder.Services.AddSingleton<IAuthorizationHandler, MinimumAgeRequirementHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, ResourceOperationRequirementHandler>();
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 builder.Services.AddScoped<IDishService, DishService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
