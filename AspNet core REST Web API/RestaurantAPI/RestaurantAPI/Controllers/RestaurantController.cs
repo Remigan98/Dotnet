@@ -27,7 +27,7 @@ public class RestaurantController : ControllerBase
     {
         if (int.TryParse(User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value, out int userId))
         {
-            int id = restaurantService.Create(dto, userId);
+            int id = restaurantService.Create(dto);
 
             return Created($"/api/restaurant/{id}", null);
         }
@@ -38,7 +38,7 @@ public class RestaurantController : ControllerBase
     [HttpPut("{id}")]
     public ActionResult Update([FromBody] UpdateRestaurantDto dto, [FromRoute] int id)
     {
-        restaurantService.Update(id, dto, User);
+        restaurantService.Update(id, dto);
 
         return Ok();
     }
@@ -46,6 +46,7 @@ public class RestaurantController : ControllerBase
     [HttpGet("GetAll")]
     [Authorize(Policy = "HasNationality")]
     [Authorize(Policy = "AtLeast20")]
+    [Authorize(Policy = "CreatedAtLeast2Restaurants")]
     public ActionResult<IEnumerable<RestaurantDto>> GetAll()
     {
         return Ok(restaurantService.GetAll());
@@ -64,7 +65,7 @@ public class RestaurantController : ControllerBase
     [HttpDelete("{id}")]
     public ActionResult Delete([FromRoute] int id)
     {
-        restaurantService.Delete(id, User);
+        restaurantService.Delete(id);
 
         return NoContent();
     }

@@ -26,14 +26,12 @@ namespace RestaurantAPI.Services
 
         public async Task RegisterUserAsync(RegisterUserDto dto, CancellationToken cancellationToken = default)
         {
-            // Optional pre-check (still enforce unique index in DB)
             bool emailExists = await context.Users
                 .AsNoTracking()
                 .AnyAsync(u => u.Email == dto.Email, cancellationToken);
 
             if (emailExists)
             {
-                // You can throw a custom exception handled by your ErrorHandlingMiddleware
                 throw new InvalidOperationException("Email is already in use.");
             }
 
@@ -71,10 +69,10 @@ namespace RestaurantAPI.Services
 
             List<Claim> claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role.Name),
-                new Claim("DateOfBirth", user.DateOfBirth?.ToString("yyyy-MM-dd") ?? string.Empty),
+                new (ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new (ClaimTypes.Email, user.Email),
+                new (ClaimTypes.Role, user.Role.Name),
+                new ("DateOfBirth", user.DateOfBirth?.ToString("yyyy-MM-dd") ?? string.Empty),
             };
 
             if (string.IsNullOrEmpty(user.Nationality) == false)

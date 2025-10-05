@@ -42,11 +42,13 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("HasNationality", policy => policy.RequireClaim("Nationality"));
     options.AddPolicy("AtLeast20", policy => policy.Requirements.Add(new MinimumAgeRequirement(20)));
+    options.AddPolicy("CreatedAtLeast2Restaurants", policy => policy.Requirements.Add(new MinimumRestaurantsCreatedRequirement(2)));
 });
 
 #region Services 
-builder.Services.AddSingleton<IAuthorizationHandler, MinimumAgeRequirementHandler>();
-builder.Services.AddSingleton<IAuthorizationHandler, ResourceOperationRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, MinimumAgeRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ResourceOperationRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, MinimumRestaurantsCreatedHandler>();
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 builder.Services.AddScoped<IDishService, DishService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -57,7 +59,9 @@ builder.Services.AddScoped<RequestTimeMiddleware>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
 builder.Services.AddScoped<RestaurantAPI.Filters.ValidationFilter>();
+builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddControllers(o => o.Filters.Add<RestaurantAPI.Filters.ValidationFilter>());
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSwaggerGen();
 #endregion
 
