@@ -58,6 +58,7 @@ builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddScoped<RequestTimeMiddleware>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<RestaurantQueryValidator>();
 builder.Services.AddScoped<RestaurantAPI.Filters.ValidationFilter>();
 builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddControllers(o => o.Filters.Add<RestaurantAPI.Filters.ValidationFilter>());

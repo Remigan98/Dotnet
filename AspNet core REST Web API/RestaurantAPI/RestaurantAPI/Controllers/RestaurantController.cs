@@ -43,13 +43,15 @@ public class RestaurantController : ControllerBase
         return Ok();
     }
 
+    //[HttpGet("GetAll")]
+    //[Authorize(Policy = "HasNationality")]
+    //[Authorize(Policy = "AtLeast20")]
+    //[Authorize(Policy = "CreatedAtLeast2Restaurants")]
     [HttpGet("GetAll")]
-    [Authorize(Policy = "HasNationality")]
-    [Authorize(Policy = "AtLeast20")]
-    [Authorize(Policy = "CreatedAtLeast2Restaurants")]
-    public ActionResult<IEnumerable<RestaurantDto>> GetAll()
+    [AllowAnonymous]
+    public ActionResult<PageResult<RestaurantDto>> GetAll([FromQuery] RestaurantQuery restaurantQuery)
     {
-        return Ok(restaurantService.GetAll());
+        return Ok(restaurantService.GetAll(restaurantQuery));
     }
 
     [HttpGet]

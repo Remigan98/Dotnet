@@ -6,6 +6,8 @@ using RestaurantAPI.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using RestaurantAPI.Authorization;
+using Microsoft.IdentityModel.Tokens;
+using System.Linq.Expressions;
 
 namespace RestaurantAPI.Services;
 
@@ -75,15 +77,39 @@ public class RestaurantService : IRestaurantService
         return restaurant is null ? throw new NotFoundException("Restaurant not found") : restaurant.ToDto();
     }
 
-    public IEnumerable<RestaurantDto> GetAll()
+    public PageResult<RestaurantDto> GetAll(RestaurantQuery query)
     {
-        List<Restaurant> restaurants = dbContext
+        IQueryable<Restaurant> baseQuery = dbContext
             .Restaurants
             .Include(r => r.Address)
             .Include(r => r.Dishes)
+            .Where(r => query.SearchPhrase == null ||
+                    (r.Name.ToLower().Contains(query.SearchPhrase.ToLower()) || r.Description.ToLower().Contains(query.SearchPhrase)));
+
+        if (query.SortBy.IsNullOrEmpty() == false)
+        {
+            var columnsSelectors = new Dictionary<string, Expression<Func<Restaurant, object>>>
+            {
+                { nameof(Restaurant.Name), r => r.Name },
+                { nameof(Restaurant.Category), r => r.Category },
+                { nameof(Restaurant.Description), r => r.Description }
+            };
+
+            Expression<Func<Restaurant, object>> selectedColumn = columnsSelectors[query.SortBy];
+
+            baseQuery = query.SortDirection == SortDirection.ASC
+                ? baseQuery.OrderBy(selectedColumn)
+                : baseQuery.OrderByDescending(selectedColumn);
+        }
+
+        List<Restaurant> restaurants = baseQuery
+            .Skip(query.PageSize * (query.PageNumber - 1))
+            .Take(query.PageSize)
             .ToList();
 
-        return restaurants.ToDto();
+        PageResult<RestaurantDto> result = new PageResult<RestaurantDto>(restaurants.ToDto(), restaurants.Count(), query.PageSize, query.PageNumber);
+
+        return result;
     }
 
     public void Delete(int id)
