@@ -64,6 +64,16 @@ builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddControllers(o => o.Filters.Add<RestaurantAPI.Filters.ValidationFilter>());
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.AllowAnyMethod()
+               .AllowAnyHeader()
+               //.WithOrigins(Configuration["AllowedOrigins"])
+               .AllowAnyOrigin();
+    });
+});
 #endregion
 
 WebApplication app = builder.Build();
@@ -75,6 +85,7 @@ using (IServiceScope scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+app.UseCors("AllowAll");
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<RequestTimeMiddleware>();
