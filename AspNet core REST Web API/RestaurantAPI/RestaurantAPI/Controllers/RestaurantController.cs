@@ -9,9 +9,7 @@ using System.Security.Claims;
 
 namespace RestaurantAPI.Controllers;
 
-[Route("api/restaurant")]
-[ApiController]
-[Authorize]
+[Authorize, ApiController, Route("api/restaurant")]
 public class RestaurantController : ControllerBase
 {
     IRestaurantService restaurantService;

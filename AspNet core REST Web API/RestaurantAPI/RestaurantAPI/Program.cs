@@ -85,6 +85,7 @@ using (IServiceScope scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+app.UseStaticFiles();
 app.UseCors("AllowAll");
 
 app.UseMiddleware<ErrorHandlingMiddleware>();

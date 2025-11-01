@@ -8,8 +8,7 @@ using RestaurantAPI.Extensions;
 
 namespace RestaurantAPI.Controllers
 {
-    [Route("api/account")]
-    [ApiController]
+    [Route("api/account"), ApiController]
     public class AccountController : ControllerBase
     {
         private readonly IAccountService accountService;
