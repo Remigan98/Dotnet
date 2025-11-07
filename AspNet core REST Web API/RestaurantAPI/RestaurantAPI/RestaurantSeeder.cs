@@ -1,4 +1,5 @@
-﻿using RestaurantAPI.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using RestaurantAPI.Entities;
 using System.Collections;
 
 namespace RestaurantAPI
@@ -14,6 +15,8 @@ namespace RestaurantAPI
 
         public void Seed()
         {
+            dbContext.Database.Migrate();
+
             if (dbContext.Database.CanConnect())
             {
                 if (dbContext.Roles.Any() == false)

@@ -86,7 +86,7 @@ public class RestaurantService : IRestaurantService
             .Where(r => query.SearchPhrase == null ||
                     (r.Name.ToLower().Contains(query.SearchPhrase.ToLower()) || r.Description.ToLower().Contains(query.SearchPhrase)));
 
-        if (query.SortBy.IsNullOrEmpty() == false)
+        if (string.IsNullOrEmpty(query.SortBy) == false)
         {
             var columnsSelectors = new Dictionary<string, Expression<Func<Restaurant, object>>>
             {

@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.StaticFiles;
 
 namespace RestaurantAPI.Controllers;
 
-[ApiController, Authorize, Route("file")]
+[ApiController, Route("file")]
+[Authorize]
 public class FileController : ControllerBase
 {
-    [HttpGet]
+    [HttpGet, ResponseCache(Duration = 1200, VaryByQueryKeys = new[] { "fileName" })]
     public ActionResult GetFile([FromQuery] string fileName)
     {
         string rootPath = Directory.GetCurrentDirectory();
@@ -32,8 +33,7 @@ public class FileController : ControllerBase
         return File(fileContents, contentType, fileName);
     }
 
-    [HttpPost]
-    [ApiExplorerSettings(IgnoreApi = true)]
+    [HttpPost, ApiExplorerSettings(IgnoreApi = true)]
     public ActionResult Upload([FromForm]IFormFile file)
     {
         if (file != null && file.Length > 0)

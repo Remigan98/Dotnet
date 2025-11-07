@@ -1,14 +1,16 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using NLog.Web;
 using RestaurantAPI;
+using RestaurantAPI.Authorization;
 using RestaurantAPI.Entities;
 using RestaurantAPI.Middleware;
 using RestaurantAPI.Models;
 using RestaurantAPI.Models.Validators;
 using RestaurantAPI.Services;
-using RestaurantAPI.Authorization;
-using Microsoft.AspNetCore.Authorization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +54,10 @@ builder.Services.AddScoped<IAuthorizationHandler, MinimumRestaurantsCreatedHandl
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 builder.Services.AddScoped<IDishService, DishService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddDbContext<RestaurantDbContext>();
+
+builder.Services.AddDbContext<RestaurantDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("dbConnection")));
+
 builder.Services.AddScoped<RestaurantSeeder>();
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddScoped<RequestTimeMiddleware>();
@@ -63,6 +68,7 @@ builder.Services.AddScoped<RestaurantAPI.Filters.ValidationFilter>();
 builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddControllers(o => o.Filters.Add<RestaurantAPI.Filters.ValidationFilter>());
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddEndpointsApiExplorer(); // To validate
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
 {
@@ -70,7 +76,6 @@ builder.Services.AddCors(options =>
     {
         builder.AllowAnyMethod()
                .AllowAnyHeader()
-               //.WithOrigins(Configuration["AllowedOrigins"])
                .AllowAnyOrigin();
     });
 });
@@ -84,22 +89,25 @@ using (IServiceScope scope = app.Services.CreateScope())
     seeder.Seed();
 }
 
-// Configure the HTTP request pipeline.
-app.UseStaticFiles();
-app.UseCors("AllowAll");
-
 app.UseMiddleware<ErrorHandlingMiddleware>();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+// Configure the HTTP request pipeline.
+app.UseHttpsRedirection();
+
+app.UseResponseCaching();
+app.UseStaticFiles();
+
 app.UseMiddleware<RequestTimeMiddleware>();
 
 app.UseAuthentication();
 
-app.UseHttpsRedirection();
-
 app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Restaurant API");
-});
+app.UseSwaggerUI();
 
 app.UseAuthorization();
 
