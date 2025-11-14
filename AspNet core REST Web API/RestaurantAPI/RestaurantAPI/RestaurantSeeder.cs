@@ -15,10 +15,15 @@ namespace RestaurantAPI
 
         public void Seed()
         {
-            dbContext.Database.Migrate();
-
             if (dbContext.Database.CanConnect())
             {
+                IEnumerable<string> pendingMigrations = dbContext.Database.GetPendingMigrations();
+
+                if (pendingMigrations != null && pendingMigrations.Any())
+                {
+                    dbContext.Database.Migrate();
+                }
+
                 if (dbContext.Roles.Any() == false)
                 {
                     IEnumerable<Role> roles = GetRoles();
