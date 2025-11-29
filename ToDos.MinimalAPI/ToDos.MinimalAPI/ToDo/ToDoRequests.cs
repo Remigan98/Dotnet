@@ -1,14 +1,41 @@
-﻿namespace ToDos.MinimalAPI.ToDo;
+﻿using FluentValidation;
+using ToDos.MinimalAPI.Extensions;
+using ToDos.MinimalAPI.ToDo.Validators;
+
+namespace ToDos.MinimalAPI.ToDo;
 
 public static class ToDoRequests
 {
     public static WebApplication RegisterEndpoints(this WebApplication app)
     {
-        app.MapGet("/todos", GetAll);
-        app.MapGet("/todos/{id:guid}", GetById);
-        app.MapPost("/todos", Create);
-        app.MapPut("/todos/{id:guid}", Update);
-        app.MapDelete("/todos/{id:guid}", Delete);
+        app.MapGet("/todos", GetAll)
+            .Produces<List<ToDo>>()
+            .WithTags("To Dos");
+
+        app.MapGet("/todos/{id:guid}", GetById)
+            .Produces<ToDo>()
+            .Produces(StatusCodes.Status404NotFound)
+            .WithTags("To Dos");
+
+        app.MapPost("/todos", Create)
+            .Produces<ToDo>(StatusCodes.Status201Created)
+            .Accepts<ToDo>("application/json")
+            .WithTags("To Dos")
+            .WithValidator<ToDo>();
+
+        app.MapPut("/todos/{id:guid}", Update)
+            .Produces(StatusCodes.Status202Accepted)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
+            .Accepts<ToDo>("application/json")
+            .WithTags("To Dos")
+            .WithValidator<ToDo>();
+
+        app.MapDelete("/todos/{id:guid}", Delete)
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound)
+            .WithTags("To Dos")
+            .ExcludeFromDescription();
 
         return app;
     }
@@ -25,13 +52,13 @@ public static class ToDoRequests
         return toDo is not null ? Results.Ok(toDo) : Results.NotFound();
     }
 
-    public static IResult Create(ToDo toDo, IToDoService service)
+    public static IResult Create(ToDo toDo, IToDoService service, IValidator<ToDo> validator)
     {
         service.Create(toDo);
         return Results.Created($"/todos/{toDo.Id}", toDo);
     }
 
-    public static IResult Update(Guid id, ToDo toDo, IToDoService service)
+    public static IResult Update(Guid id, ToDo toDo, IToDoService service, IValidator<ToDo> validator)
     {
         if (id != toDo.Id)
         {

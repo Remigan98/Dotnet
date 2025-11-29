@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using ToDos.MinimalAPI.ToDo;
 
@@ -6,6 +7,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IToDoService, ToDoService>();
+builder.Services.AddValidatorsFromAssemblyContaining(typeof(ToDo));
 
 WebApplication app = builder.Build();
 
