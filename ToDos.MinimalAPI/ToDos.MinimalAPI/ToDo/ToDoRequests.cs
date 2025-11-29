@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using ToDos.MinimalAPI.Extensions;
 using ToDos.MinimalAPI.ToDo.Validators;
 
@@ -10,12 +11,14 @@ public static class ToDoRequests
     {
         app.MapGet("/todos", GetAll)
             .Produces<List<ToDo>>()
-            .WithTags("To Dos");
+            .WithTags("To Dos")
+            .RequireAuthorization();
 
         app.MapGet("/todos/{id:guid}", GetById)
             .Produces<ToDo>()
             .Produces(StatusCodes.Status404NotFound)
-            .WithTags("To Dos");
+            .WithTags("To Dos")
+            .AllowAnonymous(); // Allow anonymous access to get a specific ToDo
 
         app.MapPost("/todos", Create)
             .Produces<ToDo>(StatusCodes.Status201Created)
@@ -52,6 +55,8 @@ public static class ToDoRequests
         return toDo is not null ? Results.Ok(toDo) : Results.NotFound();
     }
 
+    [Authorize]
+    //[AllowAnonymous]
     public static IResult Create(ToDo toDo, IToDoService service, IValidator<ToDo> validator)
     {
         service.Create(toDo);
