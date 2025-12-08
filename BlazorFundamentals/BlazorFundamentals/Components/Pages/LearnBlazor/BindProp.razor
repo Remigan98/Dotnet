@@ -32,6 +32,28 @@
             <p>Selected value: @product.Properties.FirstOrDefault(u => u.Key == selectedProp)?.Value</p>
         }
     </div>
+    <div class="col-12 p-4">
+        <h2 class="text-success">Products List</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var product in products)
+                {
+                    <tr>
+                        <td><input type="text" @bind="@product.Name" @bind:event="oninput"/></td>
+                        <td><input type="text" @bind="@product.Price" @bind:event="oninput"/></td>
+                        <td><input type="checkbox" @bind="@product.IsActive" @bind:event="oninput"/></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @code {
