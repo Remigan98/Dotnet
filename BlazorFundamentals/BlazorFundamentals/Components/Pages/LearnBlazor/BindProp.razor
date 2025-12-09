@@ -9,6 +9,7 @@
         Input Price :
         <input type="number" @bind="product.Price" @bind:event="oninput" /> <br />
         <br />
+        Product properties
         <select @bind="selectedProp">
             @foreach (var prop in product.Properties)
             {
@@ -53,10 +54,20 @@
                 }
             </tbody>
         </table>
+
+        <br/><br/>
+        <h3>Products Summary</h3>
+        @foreach(var product in products)
+        {
+            <div>
+                Name: @product.Name , Price: @product.Price , Status: @(product.IsActive ? "Active" : "Inactive")
+            </div>
+        }
     </div>
 </div>
 
-@code {
+@code 
+{
     private string selectedProp = "";
 
     Product product = new Product
@@ -81,6 +92,7 @@
         {
             Id = 1,
             Name = "Midnight Blaze",
+            Price = 9.99,
             IsActive = false,
             Properties = new List<ProductProp>
                 {
@@ -95,6 +107,7 @@
             Id = 2,
             Name = "Blossom Lily",
             IsActive = true,
+            Price = 12.49,
             Properties = new List<ProductProp>
             {
                 new ProductProp { Id = 1, Key = "Flavor", Value = "Lily" },
