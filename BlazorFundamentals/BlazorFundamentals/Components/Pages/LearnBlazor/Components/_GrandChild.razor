@@ -1,0 +1,13 @@
+﻿<div class="row">
+    <h4 class="text-primary p-lg-4 pt-4 col-12">Grand Child component</h4>
+    <p>This is a message 1 - @Message1</p>
+    <p>This is a message 2 - @Message2</p>
+    <p>Number: @Number</p>
+</div>
+
+@code 
+{
+    [CascadingParameter(Name = "Message1")] public string Message1 { get; set; } = string.Empty;
+    [CascadingParameter(Name = "Message2")] public string Message2 { get; set; } = string.Empty;
+    [CascadingParameter] public int Number { get; set; }
+}

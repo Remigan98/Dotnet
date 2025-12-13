@@ -2,11 +2,12 @@
 
 <h2 class="text-primary">Demo product actions</h2>
 <p>Favorite count: @FavoriteCount</p>
+<p>Selected product: @SelectedProduct</p>
 <div class="p-2 mt-2">
     <div class="row">
         @foreach (Product product in products)
         {
-            <_ProductView Product="product" SetIsFavoriteCallback="UpdateFavoriteCounter" />
+            <_ProductView Product="product" SetIsFavoriteCallback="UpdateFavoriteCounter" ProductSelectedCallback="UpdateSelectedProduct" />
         }
     </div>
     <br />
@@ -15,6 +16,7 @@
 @code 
 {
     public int FavoriteCount { get; set; } = 0;
+    public string SelectedProduct { get; set; } = string.Empty;
 
     private string selectedProp = "";
     List<Product> products = new();
@@ -60,5 +62,10 @@
         {
             FavoriteCount--;
         }
+    }
+
+    public void UpdateSelectedProduct(string productName)
+    {
+        SelectedProduct = productName;
     }
 }

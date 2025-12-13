@@ -1,0 +1,33 @@
+﻿@page "/learn-blazor/parent-component"
+
+<h3>Parent component</h3>
+
+<CascadingValue Value="@messageForChildComponent" Name="Message1">
+    <CascadingValue Value="@secondMessageForChildComponent" Name="Message2">
+        <CascadingValue Value="@testNumber">
+            <_Child OnButtonClickCallback="ShowMessage" Title="This title is passed from parent component">
+                <ChildContent>
+                    <p>This is some custom content passed from parent to child component.</p>
+                </ChildContent>
+                <CustomContent> 
+                    Some text between the tags from parent component. 
+                </CustomContent>
+            </_Child>
+        </CascadingValue>
+    </CascadingValue>
+</CascadingValue>
+
+<p>@MessageText</p>
+
+@code 
+{
+    string messageForChildComponent = "Message from Parent component to Child components!";
+    string secondMessageForChildComponent = "Second message from Parent component to Child components!";
+    int testNumber = 7;
+    public string MessageText = string.Empty;
+
+    void ShowMessage()
+    {
+        MessageText = "This is a message from parent component";
+    }
+}

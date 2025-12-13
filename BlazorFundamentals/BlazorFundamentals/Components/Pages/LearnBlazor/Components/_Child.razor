@@ -1,0 +1,38 @@
+﻿<h3>Child component</h3>
+
+<div>
+    <div class="alert alert-info">
+        @Title
+    </div>
+
+    @if (ChildContent is not null)
+    {
+        <div class="alert alert-success">
+            @ChildContent
+        </div>
+    }
+
+    @if (CustomContent is not null)
+    {
+        <div class="alert alert-success">
+            @CustomContent
+        </div>
+    }
+
+    <button class="btn btn-danger" @onclick="OnButtonClickCallback">Click me</button>
+    <br />
+
+    <_GrandChild> 
+
+    </_GrandChild>
+
+    <br />
+</div>
+
+@code 
+{
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? CustomContent { get; set; }
+    [Parameter] public EventCallback OnButtonClickCallback { get; set; }
+}
