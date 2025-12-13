@@ -1,0 +1,24 @@
+﻿@page "/custom-routing/{Id}/{Name}"
+@page "/custom-routing/{Name}"
+@page "/custom-routing/"
+
+<h3>CustomRouting</h3>
+
+@if (Id is not null)
+{
+    <p>You have provided an Id parameter with value: <strong>@Id</strong></p>
+}
+else if (Name is not null)
+{
+    <p>You have provided a Name parameter with value: <strong>@Name</strong></p>
+}
+else
+{
+    <p>Id and Name parameters were not provided in the URL.</p>
+}
+
+@code 
+{
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public string? Name { get; set; }
+}
