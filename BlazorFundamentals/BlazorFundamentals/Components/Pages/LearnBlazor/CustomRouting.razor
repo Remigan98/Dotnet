@@ -1,5 +1,5 @@
-﻿@page "/custom-routing/{Id:int}/{Name}"
-@page "/custom-routing/{Name}"
+﻿@* @page "/custom-routing/{Id:int}/{Name}"
+@page "/custom-routing/{Name}" *@
 @page "/custom-routing/"
 @page "/custom-routing/catch-all/{*CustomParams}"
 
@@ -38,8 +38,11 @@ else
 
 @code 
 {
-    [Parameter] public int Id { get; set; }
-    [Parameter] public string? Name { get; set; }
+    // Original way without [SupplyParameterFromQuery]
+    // [Parameter] public int Id { get; set; }
+    // [Parameter] public string? Name { get; set; }
+    [SupplyParameterFromQuery(Name = "Id")] public int Id { get; set; }
+    [SupplyParameterFromQuery(Name = "Name")] public string? Name { get; set; }
     [Parameter] public string? CustomParams { get; set; }
 
     void LoadParameters()
