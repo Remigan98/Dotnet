@@ -1,24 +1,62 @@
-﻿@page "/custom-routing/{Id}/{Name}"
+﻿@page "/custom-routing/{Id:int}/{Name}"
 @page "/custom-routing/{Name}"
 @page "/custom-routing/"
+@page "/custom-routing/catch-all/{*CustomParams}"
+
+@inject NavigationManager _NavigationManager;
 
 <h3>CustomRouting</h3>
 
-@if (Id is not null)
+@if (Id != 0)
 {
     <p>You have provided an Id parameter with value: <strong>@Id</strong></p>
 }
-else if (Name is not null)
+else
+{
+    <p>Id parameter was not provided in the URL.</p>
+}
+
+@if (Name is not null)
 {
     <p>You have provided a Name parameter with value: <strong>@Name</strong></p>
 }
 else
 {
-    <p>Id and Name parameters were not provided in the URL.</p>
+    <p>Name parameter was not provided in the URL.</p>
 }
+
+@if (CustomParams is not null)
+{
+    <p>You have provided: <strong>@CustomParams</strong> parameters</p>
+}
+
+<div class="bg-info" style="height:1000px"></div>
+<h2 id="targetElement">Main title</h2>
+<button @onclick="NavigateToPresetParameters" class="btn btn-primary">Preset parameters</button>
+<button class="btn btn-success" @onclick="LoadParameters">Load Parameters</button>
+<br />
 
 @code 
 {
-    [Parameter] public string? Id { get; set; }
+    [Parameter] public int Id { get; set; }
     [Parameter] public string? Name { get; set; }
+    [Parameter] public string? CustomParams { get; set; }
+
+    void LoadParameters()
+    {
+        var uri = _NavigationManager.ToAbsoluteUri(_NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        if (int.TryParse(query.Get("Id"), out int id))
+        {
+            Id = id;
+        }
+
+        Name = query.Get("Name");
+    }
+
+    void NavigateToPresetParameters()
+    {
+        _NavigationManager.NavigateTo("/custom-routing?Id=999&Name=John");
+    }
 }
