@@ -1,6 +1,6 @@
 ﻿<h3>Life cycle child component</h3>
 
-@foreach (string eventType in EventTypes)
+@foreach (string eventType in LifeCycleEvents)
 {
     <p>@eventType</p>
     <hr />
@@ -10,15 +10,15 @@
 {
     [Parameter] public int CountValue { get; set; }
 
-    List<string> EventTypes = new List<string>();
+    List<string> LifeCycleEvents = new List<string>();
 
     protected override void OnInitialized()
     {
-        EventTypes.Add("Called OnInitialized on child component");
+        LifeCycleEvents.Add("Called OnInitialized on child component");
     }
 
     protected override void OnParametersSet()
     {
-        EventTypes.Add($"Called OnParametersSet on child component. Current CountValue: {CountValue}");
+        LifeCycleEvents.Add($"Called OnParametersSet on child component. Current CountValue: {CountValue}");
     }
 }

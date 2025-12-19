@@ -1,4 +1,5 @@
 ﻿@page "/lifecycle"
+@using System.Threading
 
 <PageTitle>Blazor life cycle</PageTitle>
 
@@ -8,11 +9,16 @@
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 <hr />
 
-@foreach(string eventType in EventTypes)
+@foreach(string eventType in LifeCycleEvents)
 {
     <p>@eventType</p>
     <hr />
 }
+
+<button @onclick="StartCountdown">Start Countdown</button>
+<br />
+Countdown time: @countdownTime seconds
+<hr />
 
 <div class="border">
     <LifeCycleChild CountValue="@currentCount"></LifeCycleChild>
@@ -21,7 +27,8 @@
 @code 
 {
     int currentCount = 0;
-    List<string> EventTypes = new List<string>();
+    int countdownTime = 5;
+    List<string> LifeCycleEvents = new List<string>();
 
     private void IncrementCount()
     {
@@ -30,25 +37,71 @@
 
     protected override void OnInitialized()
     {
-        EventTypes.Add("OnInitialized called");
+        LifeCycleEvents.Add("OnInitialized called");
     }
 
     protected override async Task OnInitializedAsync()
     {
         await Task.Delay(1500);
 
-        EventTypes.Add("OnInitializedAsync called");
+        LifeCycleEvents.Add("OnInitializedAsync called");
     }
 
     protected override void OnParametersSet()
     {
-        EventTypes.Add("OnParametersSet called");
+        LifeCycleEvents.Add("OnParametersSet called");
     }
 
     protected override async Task OnParametersSetAsync()
     {
         await Task.Delay(1000);
 
-        EventTypes.Add("OnParametersSetAsync called");
+        LifeCycleEvents.Add("OnParametersSetAsync called");
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            LifeCycleEvents.Add("This is the first render. (OnAfterRender called)");
+        }
+        else
+        {
+            LifeCycleEvents.Add("OnAfterRender called");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            LifeCycleEvents.Add("This is the first render. (OnAfterRenderAsync called)");
+        }
+        else
+        {
+            LifeCycleEvents.Add("OnAfterRenderAsync called");
+        }
+
+        await Task.CompletedTask;
+    }
+
+    protected override bool ShouldRender()
+    {
+        LifeCycleEvents.Add("ShouldRender called");
+        return true;
+    }
+
+    void StartCountdown()
+    {
+        var timer = new Timer(TimeCallBack, null, 1000, 1000);
+    }
+
+    void TimeCallBack(object state)
+    {
+        if (countdownTime > 0)
+        {
+            countdownTime--;
+            InvokeAsync(StateHasChanged);
+        }
     }
 }
