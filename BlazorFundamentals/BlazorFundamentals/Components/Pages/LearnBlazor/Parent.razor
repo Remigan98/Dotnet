@@ -5,7 +5,7 @@
 <CascadingValue Value="@messageForChildComponent" Name="Message1">
     <CascadingValue Value="@secondMessageForChildComponent" Name="Message2">
         <CascadingValue Value="@testNumber">
-            <_Child OnButtonClickCallback="ShowMessage" Title="This title is passed from parent component">
+            <_Child @ref="childComponent" OnButtonClickCallback="ShowMessage" Title="This title is passed from parent component">
                 <ChildContent>
                     <p>This is some custom content passed from parent to child component.</p>
                 </ChildContent>
@@ -19,8 +19,13 @@
 
 <p>@MessageText</p>
 
+<div class="row">
+    <button class="btn btn-success" @onclick="() => childComponent.ToastrSuccess()">Show SweetAlert</button>
+</div>
+
 @code 
 {
+    _Child childComponent;
     string messageForChildComponent = "Message from Parent component to Child components!";
     string secondMessageForChildComponent = "Second message from Parent component to Child components!";
     int testNumber = 7;

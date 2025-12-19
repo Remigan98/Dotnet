@@ -1,4 +1,6 @@
-﻿<h3>Child component</h3>
+﻿@inject IJSRuntime _JSRuntime;
+
+<h3>Child component</h3>
 
 <div>
     <div class="alert alert-info">
@@ -35,4 +37,9 @@
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public RenderFragment? CustomContent { get; set; }
     [Parameter] public EventCallback OnButtonClickCallback { get; set; }
+
+    public async Task ToastrSuccess()
+    {
+        await _JSRuntime.ToastrSuccess("Success notification from Child component");
+    }
 }
