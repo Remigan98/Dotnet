@@ -58,3 +58,11 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.selected-product {
+    background-color: #d4edff !important;
+    border: 3px solid #1b6ec2 !important;
+    box-shadow: 0 0 10px rgba(27, 110, 194, 0.5);
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+}

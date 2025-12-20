@@ -1,4 +1,4 @@
-﻿<div class="bg-light border col-6" @onclick="(args) => SelectProduct(args, Product.Name)">
+﻿<div class="@GetContainerClass()" @onclick="(args) => SelectProduct(args, Product.Name)">
     <h4 class="text-secondary">Product - @Product.Id</h4>
     <input type="checkbox" @onchange="SetIsFavorite"/> Is favorite <br /><br />
     Name - @Product.Name
@@ -27,6 +27,7 @@
     [Parameter] public required Product Product { get; set; }
     [Parameter] public required EventCallback<bool> SetIsFavoriteCallback { get; set; }
     [Parameter] public required EventCallback<string> ProductSelectedCallback { get; set; }
+    [Parameter] public int SelectedProductId { get; set; }
 
     async Task SetIsFavorite(ChangeEventArgs args)
     {
@@ -36,5 +37,11 @@
     async Task SelectProduct(MouseEventArgs mouseEventArgs, string productName)
     {
         await ProductSelectedCallback.InvokeAsync(productName);
+    }
+
+    string GetContainerClass()
+    {
+        bool isSelected = Product.Id == SelectedProductId;
+        return isSelected ? "bg-light border col-6 selected-product" : "bg-light border col-6";
     }
 }

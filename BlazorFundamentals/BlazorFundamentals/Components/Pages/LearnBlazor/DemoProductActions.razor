@@ -7,7 +7,10 @@
     <div class="row">
         @foreach (Product product in products)
         {
-            <_ProductView Product="product" SetIsFavoriteCallback="UpdateFavoriteCounter" ProductSelectedCallback="UpdateSelectedProduct" />
+            <_ProductView Product="product" 
+                          SetIsFavoriteCallback="UpdateFavoriteCounter" 
+                          ProductSelectedCallback="UpdateSelectedProduct"
+                          SelectedProductId="SelectedProductId" />
         }
     </div>
     <br />
@@ -17,6 +20,7 @@
 {
     public int FavoriteCount { get; set; } = 0;
     public string SelectedProduct { get; set; } = string.Empty;
+    public int SelectedProductId { get; set; } = 0;
 
     private string selectedProp = "";
     List<Product> products = new();
@@ -67,5 +71,6 @@
     public void UpdateSelectedProduct(string productName)
     {
         SelectedProduct = productName;
+        SelectedProductId = products.FirstOrDefault(p => p.Name == productName)?.Id ?? 0;
     }
 }
