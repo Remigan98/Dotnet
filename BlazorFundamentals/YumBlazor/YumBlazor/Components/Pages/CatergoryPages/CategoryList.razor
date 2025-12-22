@@ -60,14 +60,13 @@ else
     {
         isProcessing = true;
 
-        await Task.Yield();
-        LoadCategories();
+        await LoadCategories();
 
         isProcessing = false;
     }
 
-    void LoadCategories()
+    async Task LoadCategories()
     {
-        categories = this.categoryRepository.GetAll();
+        categories = await this.categoryRepository.GetAllAsync();
     }
 }

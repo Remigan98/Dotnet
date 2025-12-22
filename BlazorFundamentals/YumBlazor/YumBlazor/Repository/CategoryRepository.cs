@@ -1,4 +1,5 @@
-﻿using YumBlazor.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using YumBlazor.Data;
 using YumBlazor.Repository.Interfaces;
 
 namespace YumBlazor.Repository
@@ -12,15 +13,15 @@ namespace YumBlazor.Repository
             this.dbContext = dbContext;
         }
 
-        public Category Create(Category category)
+        public async Task<Category> CreateAsync(Category category)
         {
-            dbContext.Categories.Add(category);
-            dbContext.SaveChanges();
+            await dbContext.Categories.AddAsync(category);
+            await dbContext.SaveChangesAsync();
 
             return category;
         }
 
-        public bool Delete(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             Category? obj = dbContext.Categories.Find(id);
 
@@ -31,10 +32,10 @@ namespace YumBlazor.Repository
 
             dbContext.Categories.Remove(obj);
 
-            return dbContext.SaveChanges() > 0;
+            return await dbContext.SaveChangesAsync() > 0;
         }
 
-        public Category Get(int id)
+        public async Task<Category> GetAsync(int id)
         {
             Category? category = dbContext.Categories.Find(id);
 
@@ -46,20 +47,21 @@ namespace YumBlazor.Repository
             return category;
         }
 
-        public IEnumerable<Category> GetAll()
+        public async Task<IEnumerable<Category>> GetAllAsync()
         {
-            return dbContext.Categories.ToList();
+            return await dbContext.Categories.ToListAsync();
         }
 
-        public Category Update(Category category)
+        public async Task<Category> UpdateAsync(Category category)
         {
-            Category? existingCategory = dbContext.Categories.FirstOrDefault(c => c.Id == category.Id);
+            Category? existingCategory = await dbContext.Categories.FirstOrDefaultAsync(c => c.Id == category.Id);
 
             if (existingCategory is not null)
             {
                 existingCategory.Name = category.Name;
                 dbContext.Categories.Update(existingCategory);
-                dbContext.SaveChanges();
+
+                await dbContext.SaveChangesAsync();
 
                 return existingCategory;
             }
