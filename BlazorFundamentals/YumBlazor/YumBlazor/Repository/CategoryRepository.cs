@@ -23,14 +23,14 @@ namespace YumBlazor.Repository
 
         public async Task<bool> DeleteAsync(int id)
         {
-            Category? obj = dbContext.Categories.Find(id);
+            Category? category = dbContext.Categories.Find(id);
 
-            if (obj is null)
+            if (category is null)
             {
                 return false;
             }
 
-            dbContext.Categories.Remove(obj);
+            dbContext.Categories.Remove(category);
 
             return await dbContext.SaveChangesAsync() > 0;
         }

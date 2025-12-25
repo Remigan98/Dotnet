@@ -17,7 +17,7 @@ else if (category is not null)
         <div class="card-header bg-black bg-gradient m-lg-0 py-3">
             <div class="row">
                 <div class="col-12 text-center">
-                    <h2 class="text-white py-2">@(Id > 0 ? "Update" : "Create") category</h2>
+                    <h2 class="text-white py-2">@(Id == 0 ? "Create" : "Update") category</h2>
                 </div>
             </div>
         </div>
@@ -34,7 +34,7 @@ else if (category is not null)
                     <div class="row mt-3">
                         <div class="col-6 col-md-3">
                             <button type="submit" class="btn btn-primary form-control" disabled="@isProcessing">
-                                <i class="bi bi-floppy2-fill"></i> @(Id > 0 ? "Update" : "Create")
+                                <i class="bi bi-floppy2-fill"></i> @(Id == 0 ? "Create" : "Update")
                             </button>
                         </div>
                         <div class="col-6 col-md-3">
