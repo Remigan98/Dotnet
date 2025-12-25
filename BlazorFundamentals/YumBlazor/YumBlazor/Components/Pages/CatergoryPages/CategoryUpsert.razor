@@ -1,9 +1,9 @@
 ﻿@page "/categories/create"
 @page "/categories/update/{id:int}"
 
-@inject NavigationManager Navigation
-@inject ICategoryRepository categoryRepository
-@inject IJSRuntime jsRuntime
+@inject NavigationManager _navigation
+@inject ICategoryRepository _categoryRepository
+@inject IJSRuntime _jsRuntime
 
 @if (isProcessing)
 {
@@ -71,7 +71,7 @@ else if (category is not null)
     {
         if (Id > 0)
         {
-            category = await categoryRepository.GetAsync(Id);
+            category = await _categoryRepository.GetAsync(Id);
         }
     }
 
@@ -83,17 +83,17 @@ else if (category is not null)
 
         if (Id > 0)
         {
-            await categoryRepository.UpdateAsync(category);
+            await _categoryRepository.UpdateAsync(category);
             // await jsRuntime.InvokeVoidAsync("toastr.success", "Category updated successfully.");
-            await jsRuntime.ToastrSuccess("Category updated successfully.");
+            await _jsRuntime.ToastrSuccess("Category updated successfully.");
         }
         else
         {
-            await categoryRepository.CreateAsync(category);
-            await jsRuntime.InvokeVoidAsync("toastr.success", "Category created successfully.");
+            await _categoryRepository.CreateAsync(category);
+            await _jsRuntime.InvokeVoidAsync("toastr.success", "Category created successfully.");
         }
 
         isProcessing = false;
-        Navigation.NavigateTo("categories");
+        _navigation.NavigateTo("categories");
     }
 }

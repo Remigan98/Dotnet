@@ -1,10 +1,11 @@
 ﻿@page "/products/create"
 @page "/products/update/{id:int}"
 
-@inject NavigationManager Navigation
-@inject IProductRepository productRepository
-@inject ICategoryRepository categoryRepository
-@inject IJSRuntime jsRuntime
+@inject NavigationManager _navigation
+@inject IWebHostEnvironment _environment
+@inject IProductRepository _productRepository
+@inject ICategoryRepository _categoryRepository
+@inject IJSRuntime _jsRuntime
 
 @if (isProcessing)
 {
@@ -38,6 +39,11 @@ else if (product is not null)
                         <ValidationMessage For="@(() => product.Description)" />
                     </div>
                     <div class="form-floating py-3 col-12">
+                        <InputText @bind-Value="product.Tag" class="form-control" id="Tag" placeholder="Tag" />
+                        <label for="Tag">Tag</label>
+                        <ValidationMessage For="@(() => product.Tag)" />
+                    </div>
+                    <div class="form-floating py-3 col-12">
                         <InputNumber @bind-Value="product.Price" class="form-control" id="Price" placeholder="Price" />
                             <label for="Price">Price</label>
                         <ValidationMessage For="@(() => product.Price)" />
@@ -53,7 +59,26 @@ else if (product is not null)
                         <label for="category">Category</label>
                         <ValidationMessage For="@(() => product.Category)" />
                     </div>
-                    <div class="row mt-3">
+                    <div class="form-floating py-3 col-12">
+                        @if(product.ImageUrl == null)
+                        {
+                            <InputFile OnChange="LoadFiles" class="form-control pb-3" id="customFile"
+                                       accept="image/x-png,image/jpeg"></InputFile>
+                            <label for="customFile">Upload Image</label>
+                        }
+                        @if (string.IsNullOrEmpty(product.ImageUrl) == false)
+                        {
+                            <div class="row">
+                                <div class="col-3">
+                                    <img src="@product.ImageUrl" class="img-fluid img-thumbnail mt-2" alt="Product Image" />
+                                </div>
+                                <div class="cold-md-9">
+                                    <i class="bi bi-trash btn btn-outline-danger" @onclick="DeleteImage">Remove</i>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="row pt-3">
                         <div class="col-6 col-md-3">
                             <button type="submit" class="btn btn-primary form-control" disabled="@isProcessing">
                                 <i class="bi bi-floppy2-fill"></i> @(Id == 0 ? "Create" : "Update")
@@ -78,7 +103,14 @@ else if (product is not null)
     [SupplyParameterFromForm] Product product { get; set; } = new();
     IEnumerable<Category> categories = new List<Category>();
 
+    string? directoryPath { get; set; }
     bool isProcessing { get; set; } = true;
+
+    protected override Task OnInitializedAsync()
+    {
+        directoryPath = Path.Combine(_environment.WebRootPath, "images", "product");
+        return base.OnInitializedAsync();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -94,10 +126,10 @@ else if (product is not null)
     {
         if (Id > 0)
         {
-            product = await productRepository.GetAsync(Id);
+            product = await _productRepository.GetAsync(Id);
         }
 
-        categories = await categoryRepository.GetAllAsync();
+        categories = await _categoryRepository.GetAllAsync();
     }
 
     async Task UpsertProduct()
@@ -108,17 +140,60 @@ else if (product is not null)
 
         if (Id > 0)
         {
-            await productRepository.UpdateAsync(product);
-            // await jsRuntime.InvokeVoidAsync("toastr.success", "Product updated successfully.");
-            await jsRuntime.ToastrSuccess("Product updated successfully.");
+            await _productRepository.UpdateAsync(product);
+            // await _jsRuntime.InvokeVoidAsync("toastr.success", "Product updated successfully.");
+            await _jsRuntime.ToastrSuccess("Product updated successfully.");
         }
         else
         {
-            await productRepository.CreateAsync(product);
-            await jsRuntime.InvokeVoidAsync("toastr.success", "Product created successfully.");
+            await _productRepository.CreateAsync(product);
+            await _jsRuntime.InvokeVoidAsync("toastr.success", "Product created successfully.");
         }
 
         isProcessing = false;
-        Navigation.NavigateTo("products");
+        _navigation.NavigateTo("products");
+    }
+
+    async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        isProcessing = true;
+
+        var file = e.File;
+        FileInfo fileInfo = new FileInfo(file.Name);
+        var fileName = $"{Guid.NewGuid()}.{fileInfo.Extension}";
+
+        if (Directory.Exists(directoryPath) == false)
+        {
+            Directory.CreateDirectory(directoryPath!);
+        }
+
+        var filePath = Path.Combine(directoryPath!, fileName);
+
+        await using FileStream fileStream = new FileStream(filePath, FileMode.Create);
+        await file.OpenReadStream(file.Size).CopyToAsync(fileStream);
+
+        product.ImageUrl = $"/images/product/{fileName}";
+        isProcessing = false;
+    }
+
+    async Task DeleteImage()
+    {
+        if (string.IsNullOrEmpty(product.ImageUrl) == false)
+        {
+            var existingFilePath = Path.Combine(_environment.WebRootPath, product.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+
+            if (File.Exists(existingFilePath))
+            {
+                File.Delete(existingFilePath);
+            }
+
+            product.ImageUrl = null;
+
+            await _jsRuntime.ToastrSuccess("Image removed successfully.");
+        }
+        else
+        {
+            await _jsRuntime.ToastrError("No image to remove.");
+        }
     }
 }

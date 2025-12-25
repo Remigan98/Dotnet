@@ -19,7 +19,7 @@
     <Folder Include="Services\Extensions\" />
     <Folder Include="Services\" />
     <Folder Include="ViewModels\" />
-    <Folder Include="wwwroot\images\" />
+    <Folder Include="wwwroot\images\product\" />
     <Folder Include="wwwroot\js\" />
   </ItemGroup>
 
