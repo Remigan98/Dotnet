@@ -15,7 +15,7 @@
 }
 else if (product is not null)
 {
-    <div class="card shadow border-0 mt-4">
+    <div class="card shadow border-0 m-4">
         <div class="card-header bg-black bg-gradient m-lg-0 py-3">
             <div class="row">
                 <div class="col-12 text-center">
@@ -178,7 +178,7 @@ else if (product is not null)
 
     async Task DeleteImage()
     {
-        if (string.IsNullOrEmpty(product.ImageUrl) == false)
+        if (string.IsNullOrWhiteSpace(product.ImageUrl) == false)
         {
             var existingFilePath = Path.Combine(_environment.WebRootPath, product.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
 
@@ -187,13 +187,13 @@ else if (product is not null)
                 File.Delete(existingFilePath);
             }
 
-            product.ImageUrl = null;
-
             await _jsRuntime.ToastrSuccess("Image removed successfully.");
         }
         else
         {
             await _jsRuntime.ToastrError("No image to remove.");
         }
+
+        product.ImageUrl = null;
     }
 }

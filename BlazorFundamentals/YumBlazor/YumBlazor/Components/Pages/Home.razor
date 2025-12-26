@@ -1,7 +1,149 @@
 ﻿@page "/"
+@inject IProductRepository productRepository;
+@inject ICategoryRepository categoryRepository;
+@inject IJSRuntime jsRuntime;
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+@if (isProcessing)
+{
+    <div class="position-absolute w-100 vh-100 h-75 d-flex flex-column align-items-center bg-white justify-content-center">
+        <img src="/images/loading.gif" alt="loading" />
+    </div>
+}
+else
+{
+    <div class="container-fluid px-0 m-0 full-width">
+        <div class="jumbotron-custom">
+            <div class="m-auto d-flex align-items-center" style="width: 400px; height: 50vh;">
+                <div class="d-flex align-items-center" style="width: 100%;">
+                    <input type="text" class="form-control rounded-pill"
+                           @oninput="(e) => SearchProducts(e.Value?.ToString())"
+                           placeholder="Search for Food Items!"
+                           style="width: 100%; padding: 20px;">
+                    <span style="position: relative; left: -43px;"><i class="bi bi-search"></i></span>
+                </div>
+            </div>
+        </div>
 
-Welcome to your new app.
+
+        <div class="content px-4 m-2">
+            <ul class="nav nav-underline justify-content-center mb-2">
+                <li class="nav-item">
+                    <span class="nav-link @GetActiveTabClass(0)" href="#" style="cursor: pointer" 
+                    @onclick="() => FilterProductsByCategory(0)">All</span>
+                </li>
+                @foreach (var category in categories)
+                {
+                    <li class="nav-item">
+                        <span class="nav-link @GetActiveTabClass(category.Id)" href="#" style="cursor: pointer" 
+                        @onclick="() => FilterProductsByCategory(category.Id)">@category.Name</span>
+                    </li>
+                }
+            </ul>
+            <div class="row mt-4 mx-1">
+                @foreach (var product in filteredProducts)
+                {
+                    <div class="col-12 col-md-6 col-lg-4 pe-3 mb-5">
+                        <div class="card">
+                            <div class="mt-3 mb-2 row">
+                                <div class="col-6 px-3">
+                                    @if (string.IsNullOrEmpty(product.Tag) == false)
+                                    {
+                                        <i class="bi bi-star btn btn-outline-success disabled ms-lg-2"> @product.Tag</i>
+                                    }
+                                </div>
+                                <div class="col-6 text-end px-4">
+                                    @product.Price.ToString("C")
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <img class="card-img-top img-thumbnail img-rounded w-50 mt-2"
+                                     src="@(string.IsNullOrEmpty(product.ImageUrl) ? "images/default.png" : product.ImageUrl)" style="">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title text-center lead text-success">@product.Name</h5>
+                                @if (string.IsNullOrWhiteSpace(product.Description) == false)
+                                {
+                                    <p class="card-text mt-2 text-center">@((MarkupString)@product.Description)</p>
+                                }
+                                <h4 class="text-center">
+                                    <i class="bi bi-cart3 btn btn-success text-right px-5 form-control"> Add to cart</i>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+}
+
+@code
+{
+    IEnumerable<Product> products = new List<Product>();
+    IEnumerable<Product> filteredProducts = new List<Product>();
+    IEnumerable<Category> categories = new List<Category>();
+    bool isProcessing { get; set; } = true;
+    string searchTerm { get; set; } = string.Empty;
+    int selectedCategoryId { get; set; } = 0;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isProcessing = true;
+
+            await LoadPageData();
+
+            isProcessing = false;
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadPageData()
+    {
+        products = await productRepository.GetAllAsync();
+        filteredProducts = products;
+        categories = await categoryRepository.GetAllAsync();
+    }
+
+    void FilterProductsByCategory(int categoryId)
+    {
+        selectedCategoryId = categoryId;
+
+        SearchProducts(searchTerm);
+    }
+
+    void SearchProducts(string? searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm) == false)
+        {
+            this.searchTerm = searchTerm;
+
+            if (selectedCategoryId == 0)
+            {
+                filteredProducts = products.Where(p => p.Name.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase));
+                return;
+            }
+            else
+            {
+                filteredProducts = products
+                    .Where(p => p.Name.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase))
+                    .Where(p => p.CategoryId == selectedCategoryId);
+                return;
+            }
+        }
+        else
+        {
+            filteredProducts = products;
+        }
+    }
+
+    string GetActiveTabClass(int categoryId)
+    {
+        return categoryId == selectedCategoryId ? "active" : string.Empty;
+    }
+}
