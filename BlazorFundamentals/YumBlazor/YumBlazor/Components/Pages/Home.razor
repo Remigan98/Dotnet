@@ -1,7 +1,11 @@
 ﻿@page "/"
-@inject IProductRepository productRepository;
-@inject ICategoryRepository categoryRepository;
-@inject IJSRuntime jsRuntime;
+@using System.Globalization
+@inject IProductRepository _productRepository;
+@inject ICategoryRepository _categoryRepository;
+@inject IShoppingCartRepository _cartRepository;
+@inject IJSRuntime _jsRuntime;
+@inject NavigationManager _navigationManager;
+@inject AuthenticationStateProvider _authenticationStateProvider;
 
 <PageTitle>Home</PageTitle>
 
@@ -30,14 +34,14 @@ else
         <div class="content px-4 m-2">
             <ul class="nav nav-underline justify-content-center mb-2">
                 <li class="nav-item">
-                    <span class="nav-link @GetActiveTabClass(0)" href="#" style="cursor: pointer" 
-                    @onclick="() => FilterProductsByCategory(0)">All</span>
+                    <span class="nav-link @GetActiveTabClass(0)" href="#" style="cursor: pointer"
+                          @onclick="() => FilterProductsByCategory(0)">All</span>
                 </li>
                 @foreach (var category in categories)
                 {
                     <li class="nav-item">
-                        <span class="nav-link @GetActiveTabClass(category.Id)" href="#" style="cursor: pointer" 
-                        @onclick="() => FilterProductsByCategory(category.Id)">@category.Name</span>
+                        <span class="nav-link @GetActiveTabClass(category.Id)" href="#" style="cursor: pointer"
+                              @onclick="() => FilterProductsByCategory(category.Id)">@category.Name</span>
                     </li>
                 }
             </ul>
@@ -54,7 +58,7 @@ else
                                     }
                                 </div>
                                 <div class="col-6 text-end px-4">
-                                    @product.Price.ToString("C")
+                                    @product.Price.ToString("C", CultureInfo.GetCultureInfo("en-us"))
                                 </div>
                             </div>
                             <div class="text-center">
@@ -68,7 +72,9 @@ else
                                     <p class="card-text mt-2 text-center">@((MarkupString)@product.Description)</p>
                                 }
                                 <h4 class="text-center">
-                                    <i class="bi bi-cart3 btn btn-success text-right px-5 form-control"> Add to cart</i>
+                                    <div class="m-lg-auto p-2" @onclick="() => AddToCart(product)">
+                                        <i class="bi bi-cart3 btn btn-success text-right px-5 form-control"> Add to cart</i>
+                                    </div>
                                 </h4>
                             </div>
                         </div>
@@ -105,9 +111,9 @@ else
 
     private async Task LoadPageData()
     {
-        products = await productRepository.GetAllAsync();
+        products = await _productRepository.GetAllAsync();
         filteredProducts = products;
-        categories = await categoryRepository.GetAllAsync();
+        categories = await _categoryRepository.GetAllAsync();
     }
 
     void FilterProductsByCategory(int categoryId)
@@ -145,5 +151,37 @@ else
     string GetActiveTabClass(int categoryId)
     {
         return categoryId == selectedCategoryId ? "active" : string.Empty;
+    }
+
+    async Task AddToCart(Product product)
+    {
+        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var isAuthenticated = user.Identity is not null && user.Identity.IsAuthenticated;
+
+        if (isAuthenticated == false)
+        {
+            _navigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+
+            var cartUpdated = await _cartRepository.UpdateCartAsync(userId, product.Id, 1);
+
+            if (cartUpdated)
+            {
+                await _jsRuntime.ToastrSuccess("Product added to cart successfully.");
+            }
+            else
+            {
+                await _jsRuntime.ToastrError("Failed to add product to cart.");
+            }
+        }
     }
 }
