@@ -144,7 +144,11 @@ else
         }
         else
         {
-            filteredProducts = products;
+            this.searchTerm = string.Empty;
+
+            filteredProducts = selectedCategoryId == 0
+                ? products
+                : products.Where(p => p.CategoryId == selectedCategoryId);
         }
     }
 
