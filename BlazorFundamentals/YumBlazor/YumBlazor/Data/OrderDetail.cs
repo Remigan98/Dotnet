@@ -10,7 +10,7 @@ namespace YumBlazor.Data
         public int ProductId { get; set; }
         public Product Product { get; set; }
         [Required] public int Count { get; set; } = 0;
-        [Required] public int Price { get; set; } = 0;
+        [Required] public decimal Price { get; set; } = decimal.Zero;
         [Required] public string ProductName { get; set; }
     }
 }

@@ -1,0 +1,121 @@
+﻿@page "/order/list"
+
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@using YumBlazor.Utility
+
+@inject IOrderRepository _orderRepository;
+@inject NavigationManager _navigationManager;
+@inject IJSRuntime _jsRuntime;
+@attribute [Authorize]
+
+@if (isProcessing)
+{
+    <div class="position-absolute w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
+        <img src="/images/loading.gif" alt="loading" />
+    </div>
+}
+else
+{
+    <div class="card shadow border-0 m-4">
+        <div class="card-header bg-black bg-gradient m-lg-0 py-3">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h2 class="text-white py-2">Order List</h2>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            @if (orderHeaders.Any())
+            {
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Phone Number</th>
+                            <th>Email</th>
+                            <th>Order Total</th>
+                            <th>Order Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (OrderHeader order in orderHeaders)
+                        {
+                            <tr>
+                                <td>@order.Id</td>
+                                <td>@order.Name</td>
+                                <td>@order.PhoneNumber</td>
+                                <td>@order.Email</td>
+                                <td>@order.OrderTotal.ToString("C", CultureInfo.GetCultureInfo("en-us"))</td>
+                                <td>@order.OrderDate</td>
+                                <td>@order.Status</td>
+                                <td>
+                                    <a href="@($"order/details/{order.Id}")" class="btn btn-sm btn-primary me-2">
+                                        <i class="bi bi-pencil-square" style="margin-right:5px;"></i>Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+}
+
+@code
+{
+    bool isProcessing { get; set; } = true;
+    IEnumerable<OrderHeader> orderHeaders { get; set; } = new List<OrderHeader>();
+    bool? isAdmin { get; set; }
+    string? userId { get; set; }
+
+    [CascadingParameter] public Task<AuthenticationState> authenticationState { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadOrderHeaders();
+
+            isProcessing = false;
+
+            StateHasChanged();
+        }
+    }
+
+    async Task LoadOrderHeaders()
+    {
+        isProcessing = true;
+        StateHasChanged();
+
+        await CheckAuthorization();
+
+        if (isAdmin == true)
+        {
+            orderHeaders = await _orderRepository.GetAllAsync();
+        }
+        else
+        {
+            orderHeaders = await _orderRepository.GetAllAsync(userId);
+        }
+
+        isProcessing = false;
+    }
+
+    async Task CheckAuthorization()
+    {
+        if (authenticationState is not null)
+        {
+            var authState = await authenticationState;
+            var user = authState?.User;
+
+            isAdmin = user?.IsInRole(StaticDetails.AdminRole);
+            userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        }
+    }
+}

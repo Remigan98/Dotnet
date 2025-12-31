@@ -1,0 +1,91 @@
+﻿@page "/order/details/{Id:int}"
+
+@inject IOrderRepository _orderRepository;
+
+@if (isProcessing)
+{
+    <div class="position-absolute w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
+        <img src="/images/loading.gif" alt="loading" />
+    </div>
+}
+else
+{
+    <div class="container my-5 mx-auto p-5 w-100" style="max-width: 950px;">
+        <div class="card" style="max-width: 750px;">
+            <div class="pt-3 text-success text-center">
+                <span class="h4"> ORDER DETAILS</span>
+            </div>
+
+            <hr />
+            <div class="px-3">
+                <p>Order Id: @orderHeader.Id</p>
+                <p>Name: @orderHeader.Name</p>
+                <p>Email: @orderHeader.Email</p>
+                <p>Phone: @orderHeader.PhoneNumber</p>
+                <p>Order Status: @orderHeader.Status</p>
+            </div>
+            <hr />
+            <div class="card-body">
+                <h4 class="text-success">Menu Items</h4>
+
+                @foreach (var detail in orderHeader.OrderDetails)
+                {
+                    <div class="d-flex">
+                        <div class="d-flex w-100 justify-content-between">
+                            <p>
+                                &nbsp; -- @detail.ProductName
+                            </p>
+                            <p>
+                                @detail.Price.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("en-us")) X @detail.Count = 
+                            </p>
+                        </div>
+                        <div class="ps-4">
+                            @((detail.Price * detail.Count).ToString("C", System.Globalization.CultureInfo.GetCultureInfo("en-us")))
+                        </div>
+
+                    </div>
+                }
+
+                <hr />
+                <h4 class="text-success text-end">
+                    @orderHeader.OrderTotal.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("en-us"))
+                </h4>
+                <hr />
+
+                <div class="row">
+                    <div class="col-5">
+                        <a href="order/list" class="btn btn-secondary  m-2 p-2" style="width:150px;">Back to Orders</a>
+                    </div>
+                    <div class="col-7 text-end">
+                        <button class="btn btn-danger m-2 p-2" style="width:150px;">Cancelled</button>
+                        <button class="btn btn-primary m-2 p-2" style="width:150px;">Ready for Pickup</button>
+                        <button class="btn btn-success m-2 p-2" style="width:150px;">Completed</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code
+{
+    [Parameter] public required int Id { get; set; }
+    bool isProcessing { get; set; } = true;
+    OrderHeader orderHeader = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadOrderHeaders();
+
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    async Task LoadOrderHeaders()
+    {
+        orderHeader = await _orderRepository.GetAsync(Id);
+    }
+}
