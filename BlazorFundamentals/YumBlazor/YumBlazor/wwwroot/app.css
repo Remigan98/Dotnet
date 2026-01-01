@@ -128,16 +128,10 @@ span.nav-link {
     color: #212529 !important;
 }
 
-.nav-link:focus, .nav-link:hover {
-    color: #212529;
-}
-
 span.nav-link.active {
     border-bottom: 3px solid #198754;
     color: #198754 !important;
 }
-
-
 
 .mark-up-string * {
     background: transparent !important;

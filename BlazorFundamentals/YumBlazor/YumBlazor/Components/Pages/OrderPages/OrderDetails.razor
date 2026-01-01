@@ -1,6 +1,9 @@
 ﻿@page "/order/details/{Id:int}"
+@using YumBlazor.Utility
 
 @inject IOrderRepository _orderRepository;
+@inject IJSRuntime _jsRuntime
+@inject AuthenticationStateProvider _authStateProvider
 
 @if (isProcessing)
 {
@@ -57,9 +60,18 @@ else
                         <a href="order/list" class="btn btn-secondary  m-2 p-2" style="width:150px;">Back to Orders</a>
                     </div>
                     <div class="col-7 text-end">
-                        <button class="btn btn-danger m-2 p-2" style="width:150px;">Cancelled</button>
-                        <button class="btn btn-primary m-2 p-2" style="width:150px;">Ready for Pickup</button>
-                        <button class="btn btn-success m-2 p-2" style="width:150px;">Completed</button>
+                        @if (showStatusActions)
+                        {
+                            <button class="btn btn-danger m-2 p-2" style="width:150px;" @onclick="() => UpdateStatus(StaticDetails.StatusCancelled)">Cancel</button>
+                            @if (orderHeader.Status == StaticDetails.StatusPending)
+                            {
+                                <button class="btn btn-primary m-2 p-2" style="width:150px;" @onclick="() => UpdateStatus(StaticDetails.StatusReadyForPickup)">Ready for Pickup</button>
+                            }
+                            @if (orderHeader.Status == StaticDetails.StatusReadyForPickup)
+                            {
+                                <button class="btn btn-success m-2 p-2" style="width:150px;" @onclick="() => UpdateStatus(StaticDetails.StatusCompleted)">Complete</button>
+                            }
+                        }
                     </div>
                 </div>
             </div>
@@ -71,6 +83,7 @@ else
 {
     [Parameter] public required int Id { get; set; }
     bool isProcessing { get; set; } = true;
+    bool showStatusActions { get; set; } = false;
     OrderHeader orderHeader = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -78,6 +91,7 @@ else
         if (firstRender)
         {
             await LoadOrderHeaders();
+            await CanDisplayStatusUpdateButtons();
 
             isProcessing = false;
             StateHasChanged();
@@ -87,5 +101,21 @@ else
     async Task LoadOrderHeaders()
     {
         orderHeader = await _orderRepository.GetAsync(Id);
+    }
+
+    async Task UpdateStatus(string status)
+    {
+        orderHeader.Status = status;
+        await _orderRepository.UpdateOrderStatusAsync(Id, status);
+        await _jsRuntime.ToastrSuccess($"Order status set to {status} successfully.");
+    }
+
+    async Task CanDisplayStatusUpdateButtons()
+    {
+        bool isCorrectStatus = orderHeader.Status != StaticDetails.StatusCancelled && orderHeader.Status != StaticDetails.StatusCompleted;
+        AuthenticationState state = await _authStateProvider.GetAuthenticationStateAsync();
+        bool isAdmin = state.User.IsInRole(StaticDetails.AdminRole);
+
+        showStatusActions = isCorrectStatus && isAdmin;
     }
 }
