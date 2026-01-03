@@ -34,8 +34,8 @@ else if (product is not null)
                         <ValidationMessage For="@(() => product.Name)" />
                     </div>
                     <div class="form-floating py-3 col-12">
-                        <InputText @bind-Value="product.Description" class="form-control" id="Description" placeholder="Description" />
-                            <label for="Description">Description</label>
+                        <label for="Description">Description</label><br/>
+                        <RadzenHtmlEditor @bind-Value=@product.Description style="height: 300px;" />
                         <ValidationMessage For="@(() => product.Description)" />
                     </div>
                     <div class="form-floating py-3 col-12">
@@ -158,16 +158,16 @@ else if (product is not null)
     {
         isProcessing = true;
 
-        var file = e.File;
-        FileInfo fileInfo = new FileInfo(file.Name);
-        var fileName = $"{Guid.NewGuid()}.{fileInfo.Extension}";
+        IBrowserFile? file = e.File;
+        System.IO.FileInfo fileInfo = new System.IO.FileInfo(file.Name);
+        string fileName = $"{Guid.NewGuid()}.{fileInfo.Extension}";
 
         if (Directory.Exists(directoryPath) == false)
         {
             Directory.CreateDirectory(directoryPath!);
         }
 
-        var filePath = Path.Combine(directoryPath!, fileName);
+        string filePath = Path.Combine(directoryPath!, fileName);
 
         await using FileStream fileStream = new FileStream(filePath, FileMode.Create);
         await file.OpenReadStream(file.Size).CopyToAsync(fileStream);
@@ -180,7 +180,7 @@ else if (product is not null)
     {
         if (string.IsNullOrWhiteSpace(product.ImageUrl) == false)
         {
-            var existingFilePath = Path.Combine(_environment.WebRootPath, product.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+            string existingFilePath = Path.Combine(_environment.WebRootPath, product.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
 
             if (File.Exists(existingFilePath))
             {

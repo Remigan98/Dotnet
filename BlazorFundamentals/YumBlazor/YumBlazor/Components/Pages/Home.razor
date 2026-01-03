@@ -1,11 +1,15 @@
 ﻿@page "/"
+
 @using System.Globalization
+@using YumBlazor.Services
+
 @inject IProductRepository _productRepository;
 @inject ICategoryRepository _categoryRepository;
 @inject IShoppingCartRepository _cartRepository;
 @inject IJSRuntime _jsRuntime;
 @inject NavigationManager _navigationManager;
 @inject AuthenticationStateProvider _authenticationStateProvider;
+@inject SharedStateService _sharedStateService
 
 <PageTitle>Home</PageTitle>
 
@@ -29,8 +33,7 @@ else
                 </div>
             </div>
         </div>
-
-
+        <RadzenButton Text="Hi"></RadzenButton>
         <div class="content px-4 m-2">
             <ul class="nav nav-underline justify-content-center mb-2">
                 <li class="nav-item">
@@ -181,6 +184,7 @@ else
             if (cartUpdated)
             {
                 await _jsRuntime.ToastrSuccess("Product added to cart successfully.");
+                _sharedStateService.TotalCartCount = await _cartRepository.GetTotalCartCountAsync(userId);
             }
             else
             {

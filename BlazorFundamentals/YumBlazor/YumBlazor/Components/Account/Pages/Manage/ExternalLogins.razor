@@ -53,7 +53,7 @@
             <p>
                 @foreach (var provider in otherLogins)
                 {
-                    <button type="submit" class="btn btn-primary" name="Provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
+                    <button type="submit" class="btn btn-primary m-1" name="Provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
                         @provider.DisplayName
                     </button>
                 }
@@ -85,6 +85,7 @@
     protected override async Task OnInitializedAsync()
     {
         user = await UserManager.GetUserAsync(HttpContext.User);
+
         if (user is null)
         {
             RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);

@@ -29,7 +29,32 @@ else
         <div class="card-body p-4">
             @if (orderHeaders.Any())
             {
-                <table class="table table-striped table-bordered">
+                <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Advanced" AllowSorting="true" PageSize="5" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
+                                Data="@orderHeaders" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or" SelectionMode="DataGridSelectionMode.Single">
+                    <Columns>
+                        <RadzenDataGridColumn Property="Id" Filterable="true" Title="ID" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                        <RadzenDataGridColumn Property="Name" Title="Name" Frozen="true" Width="120px" />
+                        <RadzenDataGridColumn Property="PhoneNumber" Title="Phone Number" Width="120px" />
+                        <RadzenDataGridColumn Property="Email" Title="Email" Width="120px" />
+                        <RadzenDataGridColumn Property="OrderTotal" Title="Order Total" FormatString="{0:C}" Width="120px" />
+                        <RadzenDataGridColumn Property="OrderDate" Title="Order Date" FormatString="{0:d}" Width="120px" />
+                        <RadzenDataGridColumn Property="Status" Title="Status" Width="120px" />
+                        <RadzenDataGridColumn Title="Actions" Sortable="false" Filterable="false" Width="100px" >
+                            <Template Context="orderHeader">
+                                <RadzenButton Shade="Shade.Lighter" Text="Details" ButtonStyle="ButtonStyle.Info" 
+                                Click="@(() => _navigationManager.NavigateTo($"order/details/{orderHeader.Id}"))"/>
+                            </Template>
+                        </RadzenDataGridColumn>
+@*                         <RadzenDataGridColumn Property="@nameof(Employee.City)" Title="City" Width="160px" />
+                        <RadzenDataGridColumn Property="@nameof(Employee.Region)" Title="Region" Width="160px" />
+                        <RadzenDataGridColumn Property="@nameof(Employee.PostalCode)" Title="Postal Code" Width="160px" />
+                        <RadzenDataGridColumn Property="@nameof(Employee.Country)" Title="Country" Width="160px" />
+                        <RadzenDataGridColumn Property="@nameof(Employee.HomePhone)" Title="Home Phone" Width="160px" />
+                        <RadzenDataGridColumn Property="@nameof(Employee.Extension)" Title="Extension" Width="160px" />
+                        <RadzenDataGridColumn Property="@nameof(Employee.Notes)" Title="Notes" Width="300px" /> *@
+                    </Columns>
+                </RadzenDataGrid>
+                @* <table class="table table-striped table-bordered">
                     <thead class="table-dark">
                         <tr>
                             <th>ID</th>
@@ -61,7 +86,7 @@ else
                             </tr>
                         }
                     </tbody>
-                </table>
+                </table> *@
             }
         </div>
     </div>

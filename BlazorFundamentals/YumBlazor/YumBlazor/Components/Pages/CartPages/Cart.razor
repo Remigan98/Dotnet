@@ -3,11 +3,14 @@
 @using Microsoft.AspNetCore.Authorization
 @using System.Globalization
 @using YumBlazor.Utility
+@using YumBlazor.Services
 
 @inject IShoppingCartRepository _cartRepository;
 @inject IOrderRepository _orderRepository;
 @inject NavigationManager _navigationManager;
 @inject AuthenticationStateProvider _authenticationStateProvider;
+@inject SharedStateService _sharedStateService;
+@inject PaymentService _paymentService;
 @attribute [Authorize]
 
 <PageTitle>Shopping Cart</PageTitle>
@@ -166,6 +169,7 @@ else
         }
 
         OrderHeader.OrderTotal = Math.Round(OrderHeader.OrderTotal, 2);
+        _sharedStateService.TotalCartCount = totalItems;
     }
 
     private async Task UpdateCartAsync(int productId, int updateBy)
@@ -190,12 +194,15 @@ else
     async Task ProcessOrderCreation()
     {
         isProcessing = true;
+
         await Task.Yield();
 
         OrderHeader.OrderDetails = StaticDetails.ConvertShoppingCartListToOrderDetails(shoppingCarts.ToList());
+        var session = _paymentService.CreateCheckoutSession(OrderHeader);
+        OrderHeader.SessionId = session.Id;
         
         await _orderRepository.CreateAsync(OrderHeader);
 
-        _navigationManager.NavigateTo($"/order/confirmation/{OrderHeader.Id}");
+        _navigationManager.NavigateTo(session.Url);
     }
 }

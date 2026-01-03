@@ -63,7 +63,7 @@ else
                         @if (showStatusActions)
                         {
                             <button class="btn btn-danger m-2 p-2" style="width:150px;" @onclick="() => UpdateStatus(StaticDetails.StatusCancelled)">Cancel</button>
-                            @if (orderHeader.Status == StaticDetails.StatusPending)
+                            @if (orderHeader.Status == StaticDetails.StatusApproved)
                             {
                                 <button class="btn btn-primary m-2 p-2" style="width:150px;" @onclick="() => UpdateStatus(StaticDetails.StatusReadyForPickup)">Ready for Pickup</button>
                             }
@@ -106,7 +106,7 @@ else
     async Task UpdateStatus(string status)
     {
         orderHeader.Status = status;
-        await _orderRepository.UpdateOrderStatusAsync(Id, status);
+        await _orderRepository.UpdateOrderStatusAsync(Id, status, "");
         await _jsRuntime.ToastrSuccess($"Order status set to {status} successfully.");
     }
 

@@ -62,5 +62,11 @@ namespace YumBlazor.Repository
 
             return await dbContext.SaveChangesAsync() > 0;
         }
+
+        public async Task<int> GetTotalCartCountAsync(string? userId)
+        {
+            var count = await dbContext.ShoppingCarts.Where(u => u.UserId == userId).SumAsync(u => u.Count);
+            return count;
+        }
     }
 }
