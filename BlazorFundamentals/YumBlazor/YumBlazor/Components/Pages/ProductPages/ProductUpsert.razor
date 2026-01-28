@@ -1,97 +1,102 @@
 ﻿@page "/products/create"
 @page "/products/update/{id:int}"
 
+@using YumBlazor.Services
+
 @inject NavigationManager _navigation
-@inject IWebHostEnvironment _environment
 @inject IProductRepository _productRepository
 @inject ICategoryRepository _categoryRepository
+@inject IBlobStorageService _blobStorageService
 @inject IJSRuntime _jsRuntime
 
-@if (isProcessing)
+@if (product is not null)
 {
-    <div class="position-absolute w-75 h-75 d-flex flex-column align-items-center bg-white justify-content-center">
-        <img src="/images/loading.gif" alt="loading" />
-    </div>
-}
-else if (product is not null)
-{
-    <div class="card shadow border-0 m-4">
-        <div class="card-header bg-black bg-gradient m-lg-0 py-3">
-            <div class="row">
-                <div class="col-12 text-center">
-                    <h2 class="text-white py-2">@(Id == 0 ? "Create" : "Update") product</h2>
+    <div class="position-relative">
+        @if (isProcessing)
+        {
+            <div class="position-absolute w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center" style="z-index: 1000; opacity: 0.9;">
+                <img src="/images/loading.gif" alt="loading" />
+            </div>
+        }
+        
+        <div class="card shadow border-0 m-4">
+            <div class="card-header bg-black bg-gradient m-lg-0 py-3">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h2 class="text-white py-2">@(Id == 0 ? "Create" : "Update") product</h2>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="card-body p-4">
-            <EditForm Model="product" FormName="ProductUpsertForm" OnValidSubmit="UpsertProduct">
-                <DataAnnotationsValidator />
+            <div class="card-body p-4">
+                <EditForm Model="product" FormName="ProductUpsertForm" OnValidSubmit="UpsertProduct">
+                    <DataAnnotationsValidator />
 
-                <div class="border p-3 mt-4">
-                    <div class="form-floating py-3 col-12">
-                        <InputText @bind-Value="product.Name" class="form-control" id="Name" placeholder="Name"/>
-                            <label for="Name">Name</label>
-                        <ValidationMessage For="@(() => product.Name)" />
-                    </div>
-                    <div class="form-floating py-3 col-12">
-                        <label for="Description">Description</label><br/>
-                        <RadzenHtmlEditor @bind-Value=@product.Description style="height: 300px;" />
-                        <ValidationMessage For="@(() => product.Description)" />
-                    </div>
-                    <div class="form-floating py-3 col-12">
-                        <InputText @bind-Value="product.Tag" class="form-control" id="Tag" placeholder="Tag" />
-                        <label for="Tag">Tag</label>
-                        <ValidationMessage For="@(() => product.Tag)" />
-                    </div>
-                    <div class="form-floating py-3 col-12">
-                        <InputNumber @bind-Value="product.Price" class="form-control" id="Price" placeholder="Price" />
-                            <label for="Price">Price</label>
-                        <ValidationMessage For="@(() => product.Price)" />
-                    </div>
-                    <div class="form-floating py-3 col-12">
-                        <InputSelect @bind-Value="product.CategoryId" class="form-select" id="category">
-                        <option value="0" disabled selected>Select Category</option>
-                            @foreach (Category category in categories)
+                    <div class="border p-3 mt-4">
+                        <div class="form-floating py-3 col-12">
+                            <InputText @bind-Value="product.Name" class="form-control" id="Name" placeholder="Name"/>
+                                <label for="Name">Name</label>
+                            <ValidationMessage For="@(() => product.Name)" />
+                        </div>
+                        <div class="form-floating py-3 col-12">
+                            <label for="Description">Description</label><br/>
+                            <RadzenHtmlEditor @bind-Value=@product.Description style="height: 300px;" />
+                            <ValidationMessage For="@(() => product.Description)" />
+                        </div>
+                        <div class="form-floating py-3 col-12">
+                            <InputText @bind-Value="product.Tag" class="form-control" id="Tag" placeholder="Tag" />
+                            <label for="Tag">Tag</label>
+                            <ValidationMessage For="@(() => product.Tag)" />
+                        </div>
+                        <div class="form-floating py-3 col-12">
+                            <InputNumber @bind-Value="product.Price" class="form-control" id="Price" placeholder="Price" />
+                                <label for="Price">Price</label>
+                            <ValidationMessage For="@(() => product.Price)" />
+                        </div>
+                        <div class="form-floating py-3 col-12">
+                            <InputSelect @bind-Value="product.CategoryId" class="form-select" id="category">
+                            <option value="0" disabled selected>Select Category</option>
+                                @foreach (Category category in categories)
+                                {
+                                    <option value="@category.Id">@category.Name</option>
+                                }
+                            </InputSelect>
+                            <label for="category">Category</label>
+                            <ValidationMessage For="@(() => product.CategoryId)" />
+                        </div>
+                        <div class="form-floating py-3 col-12">
+                            @if(product.ImageUrl == null)
                             {
-                                <option value="@category.Id">@category.Name</option>
+                                <InputFile OnChange="LoadFiles" class="form-control pb-3" id="customFile"
+                                           accept="image/x-png,image/jpeg"></InputFile>
+                                <label for="customFile">Upload Image</label>
                             }
-                        </InputSelect>
-                        <label for="category">Category</label>
-                        <ValidationMessage For="@(() => product.Category)" />
-                    </div>
-                    <div class="form-floating py-3 col-12">
-                        @if(product.ImageUrl == null)
-                        {
-                            <InputFile OnChange="LoadFiles" class="form-control pb-3" id="customFile"
-                                       accept="image/x-png,image/jpeg"></InputFile>
-                            <label for="customFile">Upload Image</label>
-                        }
-                        @if (string.IsNullOrEmpty(product.ImageUrl) == false)
-                        {
-                            <div class="row">
-                                <div class="col-3">
-                                    <img src="@product.ImageUrl" class="img-fluid img-thumbnail mt-2" alt="Product Image" />
+                            @if (string.IsNullOrEmpty(product.ImageUrl) == false)
+                            {
+                                <div class="row">
+                                    <div class="col-3">
+                                        <img src="@product.ImageUrl" class="img-fluid img-thumbnail mt-2" alt="Product Image" />
+                                    </div>
+                                    <div class="cold-md-9">
+                                        <i class="bi bi-trash btn btn-outline-danger" @onclick="DeleteImage">Remove</i>
+                                    </div>
                                 </div>
-                                <div class="cold-md-9">
-                                    <i class="bi bi-trash btn btn-outline-danger" @onclick="DeleteImage">Remove</i>
-                                </div>
+                            }
+                        </div>
+                        <div class="row pt-3">
+                            <div class="col-6 col-md-3">
+                                <button type="submit" class="btn btn-primary form-control" disabled="@isProcessing">
+                                    <i class="bi bi-floppy2-fill"></i> @(Id == 0 ? "Create" : "Update")
+                                </button>
                             </div>
-                        }
-                    </div>
-                    <div class="row pt-3">
-                        <div class="col-6 col-md-3">
-                            <button type="submit" class="btn btn-primary form-control" disabled="@isProcessing">
-                                <i class="bi bi-floppy2-fill"></i> @(Id == 0 ? "Create" : "Update")
-                            </button>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <a href="products" class="btn btn-secondary form-control" disabled="@isProcessing">
-                                <i class="bi bi-arrow-bar-left"></i> Cancel
-                            </a>
+                            <div class="col-6 col-md-3">
+                                <a href="products" class="btn btn-secondary form-control" disabled="@isProcessing">
+                                    <i class="bi bi-arrow-bar-left"></i> Cancel
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </EditForm>
+                </EditForm>
+            </div>
         </div>
     </div>
 }
@@ -103,14 +108,8 @@ else if (product is not null)
     [SupplyParameterFromForm] Product product { get; set; } = new();
     IEnumerable<Category> categories = new List<Category>();
 
-    string? directoryPath { get; set; }
     bool isProcessing { get; set; } = true;
-
-    protected override Task OnInitializedAsync()
-    {
-        directoryPath = Path.Combine(_environment.WebRootPath, "images", "product");
-        return base.OnInitializedAsync();
-    }
+    string? oldImageUrl { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -127,6 +126,7 @@ else if (product is not null)
         if (Id > 0)
         {
             product = await _productRepository.GetAsync(Id);
+            oldImageUrl = product.ImageUrl; // Store old image URL for potential deletion
         }
 
         categories = await _categoryRepository.GetAllAsync();
@@ -136,18 +136,21 @@ else if (product is not null)
     {
         isProcessing = true;
 
-        StateHasChanged();
+        // Delete old image if a new one was uploaded
+        if (!string.IsNullOrEmpty(oldImageUrl) && oldImageUrl != product.ImageUrl)
+        {
+            await _blobStorageService.DeleteImageAsync(oldImageUrl);
+        }
 
         if (Id > 0)
         {
             await _productRepository.UpdateAsync(product);
-            // await _jsRuntime.InvokeVoidAsync("toastr.success", "Product updated successfully.");
             await _jsRuntime.ToastrSuccess("Product updated successfully.");
         }
         else
         {
             await _productRepository.CreateAsync(product);
-            await _jsRuntime.InvokeVoidAsync("toastr.success", "Product created successfully.");
+            await _jsRuntime.ToastrSuccess("Product created successfully.");
         }
 
         isProcessing = false;
@@ -158,42 +161,58 @@ else if (product is not null)
     {
         isProcessing = true;
 
-        IBrowserFile? file = e.File;
-        System.IO.FileInfo fileInfo = new System.IO.FileInfo(file.Name);
-        string fileName = $"{Guid.NewGuid()}.{fileInfo.Extension}";
-
-        if (Directory.Exists(directoryPath) == false)
+        try
         {
-            Directory.CreateDirectory(directoryPath!);
+            IBrowserFile file = e.File;
+
+            const long maxFileSize = 5 * 1024 * 1024;
+
+            if (file.Size > maxFileSize)
+            {
+                await _jsRuntime.ToastrError("File size must be less than 5MB.");
+                isProcessing = false;
+                return;
+            }
+
+            using (Stream stream = file.OpenReadStream(maxFileSize))
+            {
+                product.ImageUrl = await _blobStorageService.UploadImageAsync(stream, file.Name, file.ContentType);
+            }
+            
+            await _jsRuntime.ToastrSuccess("Image uploaded successfully.");
         }
-
-        string filePath = Path.Combine(directoryPath!, fileName);
-
-        await using FileStream fileStream = new FileStream(filePath, FileMode.Create);
-        await file.OpenReadStream(file.Size).CopyToAsync(fileStream);
-
-        product.ImageUrl = $"/images/product/{fileName}";
-        isProcessing = false;
+        catch (Exception ex)
+        {
+            await _jsRuntime.ToastrError($"Error uploading image: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
     }
 
     async Task DeleteImage()
     {
         if (string.IsNullOrWhiteSpace(product.ImageUrl) == false)
         {
-            string existingFilePath = Path.Combine(_environment.WebRootPath, product.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-
-            if (File.Exists(existingFilePath))
+            bool deleted = await _blobStorageService.DeleteImageAsync(product.ImageUrl);
+            
+            if (deleted)
             {
-                File.Delete(existingFilePath);
+                await _jsRuntime.ToastrSuccess("Image removed successfully.");
+                product.ImageUrl = null;
             }
-
-            await _jsRuntime.ToastrSuccess("Image removed successfully.");
+            else
+            {
+                await _jsRuntime.ToastrError("Failed to remove image.");
+            }
         }
         else
         {
             await _jsRuntime.ToastrError("No image to remove.");
         }
-
-        product.ImageUrl = null;
+        
+        StateHasChanged();
     }
 }

@@ -1,18 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using YumBlazor.Data;
 using YumBlazor.Repository.Interfaces;
+using YumBlazor.Services;
 
 namespace YumBlazor.Repository
 {
     public class ProductRepository : IProductRepository
     {
         readonly ApplicationDbContext dbContext;
-        readonly IWebHostEnvironment webHostEnvironment;
+        readonly IBlobStorageService blobStorageService;
 
-        public ProductRepository(ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment)
+        public ProductRepository(ApplicationDbContext dbContext, IBlobStorageService blobStorageService)
         {
             this.dbContext = dbContext;
-            this.webHostEnvironment = webHostEnvironment;
+            this.blobStorageService = blobStorageService;
         }
 
         public async Task<Product> CreateAsync(Product product)
@@ -34,12 +35,7 @@ namespace YumBlazor.Repository
 
             if (product.ImageUrl is not null)
             {
-                var imagePath = Path.Combine(webHostEnvironment.WebRootPath, product.ImageUrl.TrimStart('/'));
-
-                if (File.Exists(imagePath) && product?.ImageUrl is not null)
-                {
-                    File.Delete(imagePath);
-                }
+                await blobStorageService.DeleteImageAsync(product.ImageUrl);
             }
 
             dbContext.Products.Remove(product);

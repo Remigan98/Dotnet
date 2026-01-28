@@ -10,8 +10,12 @@ namespace YumBlazor.Data
         [Range(0.01, 1000)] public decimal Price { get; set; } = decimal.Zero;
         public string? Description { get; set; }
         public string? Tag { get; set; }
+
+        [Required(ErrorMessage = "Please select a category")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a category")]
         public int CategoryId { get; set; }
-        [ForeignKey("CategoryId")] public Category Category { get; set; }
+        
+        [ForeignKey("CategoryId")] public Category? Category { get; set; }
 
         public string? ImageUrl { get; set; }
     }

@@ -9,8 +9,10 @@ using YumBlazor.Data;
 using YumBlazor.Repository;
 using YumBlazor.Repository.Interfaces;
 using Stripe;
+using Microsoft.Extensions.Azure;
+using Azure.Storage.Blobs;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
@@ -47,7 +49,7 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString), ServiceLifetime.Transient);
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -63,8 +65,22 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddAzureClients(clientBuilder =>
+{
+    clientBuilder.AddBlobServiceClient(builder.Configuration["StorageConnection:blobServiceUri"]!);
+    clientBuilder.AddQueueServiceClient(builder.Configuration["StorageConnection:queueServiceUri"]!);
+    clientBuilder.AddTableServiceClient(builder.Configuration["StorageConnection:tableServiceUri"]!);
+});
 
-var app = builder.Build();
+// Register as keyed service
+builder.Services.AddKeyedScoped<BlobServiceClient>("StorageConnection", (sp, key) =>
+{
+    return sp.GetRequiredService<BlobServiceClient>();
+});
+
+builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+
+WebApplication app = builder.Build();
 
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"] ?? string.Empty;
 
@@ -91,4 +107,15 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
+await EnsureBlobContainerExistsAsync(app.Services);
+
 app.Run();
+
+static async Task EnsureBlobContainerExistsAsync(IServiceProvider services)
+{
+    using IServiceScope scope = services.CreateScope();
+    BlobServiceClient blobServiceClient = scope.ServiceProvider.GetRequiredKeyedService<BlobServiceClient>("StorageConnection");
+
+    BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("product-images");
+    await containerClient.CreateIfNotExistsAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
+}
