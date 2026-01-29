@@ -11,6 +11,7 @@ using YumBlazor.Repository.Interfaces;
 using Stripe;
 using Microsoft.Extensions.Azure;
 using Azure.Storage.Blobs;
+using Azure.Identity;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -65,11 +66,29 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+// Configure Azure Storage - supports both local development and Azure Managed Identity
 builder.Services.AddAzureClients(clientBuilder =>
 {
-    clientBuilder.AddBlobServiceClient(builder.Configuration["StorageConnection:blobServiceUri"]!);
-    clientBuilder.AddQueueServiceClient(builder.Configuration["StorageConnection:queueServiceUri"]!);
-    clientBuilder.AddTableServiceClient(builder.Configuration["StorageConnection:tableServiceUri"]!);
+    var blobUri = builder.Configuration["StorageConnection:blobServiceUri"];
+    var queueUri = builder.Configuration["StorageConnection:queueServiceUri"];
+    var tableUri = builder.Configuration["StorageConnection:tableServiceUri"];
+
+    // If URIs are provided (Azure), use them with Managed Identity
+    if (!string.IsNullOrEmpty(blobUri) && Uri.TryCreate(blobUri, UriKind.Absolute, out var parsedBlobUri))
+    {
+        clientBuilder.AddBlobServiceClient(parsedBlobUri);
+        clientBuilder.AddQueueServiceClient(new Uri(queueUri!));
+        clientBuilder.AddTableServiceClient(new Uri(tableUri!));
+        clientBuilder.UseCredential(new DefaultAzureCredential());
+    }
+    // Otherwise, fallback to connection string (local development)
+    else
+    {
+        clientBuilder.AddBlobServiceClient(builder.Configuration["StorageConnection:blobServiceUri"]!);
+        clientBuilder.AddQueueServiceClient(builder.Configuration["StorageConnection:queueServiceUri"]!);
+        clientBuilder.AddTableServiceClient(builder.Configuration["StorageConnection:tableServiceUri"]!);
+    }
 });
 
 // Register as keyed service
