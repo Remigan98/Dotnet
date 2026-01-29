@@ -41,9 +41,7 @@ jobs:
 
     - name: Apply Database Migrations
       run: |
-        dotnet ef database update --project ${{ env.PROJECT_PATH }} --connection "${{ secrets.AZURE_SQL_CONNECTION_STRING }}" --no-build
-      env:
-        DOTNET_ENVIRONMENT: Production
+        dotnet ef database update --project ${{ env.PROJECT_PATH }} --configuration Release --connection "${{ secrets.AZURE_SQL_CONNECTION_STRING }}"
 
     - name: Publish
       run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ./publish
