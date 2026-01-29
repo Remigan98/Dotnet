@@ -1,0 +1,61 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'YumBlazor/**'
+      - '.github/workflows/azure-deploy.yml'
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: yumBlazorDemo
+  DOTNET_VERSION: '10.0.x'
+  WORKING_DIRECTORY: './YumBlazor'
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.WORKING_DIRECTORY }}
+
+    - name: Build
+      run: dotnet build ${{ env.WORKING_DIRECTORY }} --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test ${{ env.WORKING_DIRECTORY }} --configuration Release --no-build --verbosity normal
+      continue-on-error: true
+
+    - name: Install EF Core Tools
+      run: dotnet tool install --global dotnet-ef
+
+    - name: Apply Database Migrations
+      run: |
+        dotnet ef database update --project ${{ env.WORKING_DIRECTORY }} --connection "${{ secrets.AZURE_SQL_CONNECTION_STRING }}" --no-build
+      env:
+        DOTNET_ENVIRONMENT: Production
+
+    - name: Publish
+      run: dotnet publish ${{ env.WORKING_DIRECTORY }} --configuration Release --no-build --output ./publish
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ./publish
+
+    - name: Deployment Summary
+      run: |
+        echo "✅ Deployment completed successfully!"
+        echo "🌐 App URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
