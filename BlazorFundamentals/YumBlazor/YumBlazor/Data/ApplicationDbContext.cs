@@ -15,6 +15,16 @@ namespace YumBlazor.Data
         {
             base.OnModelCreating(builder);
 
+            // Configure decimal precision for Price properties
+            builder.Entity<Product>()
+                .Property(p => p.Price)
+                .HasPrecision(18, 2);
+
+            builder.Entity<OrderDetail>()
+                .Property(od => od.Price)
+                .HasPrecision(18, 2);
+
+            // Existing seed data
             builder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Appetizer" },
                 new Category { Id = 2, Name = "Entree" },
