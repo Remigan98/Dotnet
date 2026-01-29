@@ -4,14 +4,14 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'YumBlazor/**'
+      - 'BlazorFundamentals/YumBlazor/**'
       - '.github/workflows/azure-deploy.yml'
   workflow_dispatch:
 
 env:
   AZURE_WEBAPP_NAME: yumBlazorDemo
   DOTNET_VERSION: '10.0.x'
-  PROJECT_PATH: 'YumBlazor/YumBlazor.csproj'
+  PROJECT_PATH: 'BlazorFundamentals/YumBlazor/YumBlazor.csproj'
 
 jobs:
   build-and-deploy:
