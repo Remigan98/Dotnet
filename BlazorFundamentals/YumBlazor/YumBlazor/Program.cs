@@ -125,7 +125,15 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
-await EnsureBlobContainerExistsAsync(app.Services);
+try
+{
+    await EnsureBlobContainerExistsAsync(app.Services);
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+    logger.LogError(ex, "Failed to initialize blob container. Continuing anyway...");
+}
 
 app.Run();
 
