@@ -143,5 +143,16 @@ static async Task EnsureBlobContainerExistsAsync(IServiceProvider services)
     BlobServiceClient blobServiceClient = scope.ServiceProvider.GetRequiredKeyedService<BlobServiceClient>("StorageConnection");
 
     BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("product-images");
+    
     await containerClient.CreateIfNotExistsAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
+
+    try
+    {
+        await containerClient.SetAccessPolicyAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+        logger.LogWarning(ex, "Could not set container public access policy. Blobs may not be publicly accessible.");
+    }
 }
