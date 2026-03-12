@@ -3,5 +3,5 @@ using Application.Products.Dtos;
 
 namespace Application.Products.Commands.Update
 {
-    public sealed record UpdateProductCommand(Guid Id, string Name, decimal Price, Guid CategoryId) : ICommand<ProductDto>;
+    public sealed record UpdateProductCommand(int Id, string Name, decimal Price, int CategoryId) : ICommand<ProductDto>;
 }

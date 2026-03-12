@@ -30,14 +30,7 @@ namespace Application.Products.Commands.Create
             await this._products.AddAsync(product, cancellationToken);
             await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return new ProductDto()
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Price = product.Price,
-                Stock = product.Stock,
-                CategoryId = product.CategoryId
-            };
+            return new ProductDto(product);
         }
     }
 }
