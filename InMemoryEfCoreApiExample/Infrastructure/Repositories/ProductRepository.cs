@@ -30,7 +30,7 @@ namespace Infrastructure.Repositories
             return await this._dbContext.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
-        public async Task RemoveAsync(Product product)
+        public async Task DeleteAsync(Product product)
         {
             await Task.Run(() => this._dbContext.Products.Remove(product));
         }

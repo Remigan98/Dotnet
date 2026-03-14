@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Categories\Commands\Delete\" />
     <Folder Include="Categories\Commands\Update\" />
     <Folder Include="Categories\Queries\" />
     <Folder Include="Common\Mapping\" />
