@@ -7,6 +7,7 @@ namespace Application.Categories.Dtos
 {
     public sealed record CategoryDto
     {
+        public int Id { get; set; }
         public string Name { get; set; } = default!;
         public string Description { get; set; } = default!;
 
@@ -21,6 +22,8 @@ namespace Application.Categories.Dtos
         public CategoryDto(CategoryDto copy)
         {
             ArgumentNullException.ThrowIfNull(copy);
+
+            Id = copy.Id;
             Name = copy.Name;
             Description = copy.Description;
         }
@@ -28,6 +31,8 @@ namespace Application.Categories.Dtos
         public CategoryDto(Category category)
         {
             ArgumentNullException.ThrowIfNull(category);
+
+            Id = category.Id;
             Name = category.Name;
             Description = category.Description;
         }

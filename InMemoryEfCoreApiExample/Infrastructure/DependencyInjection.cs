@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions;
 using Application.Abstractions.Persistence;
+using Application.Behaviors;
 using Infrastructure.Data;
 using Infrastructure.Dispatching;
 using Infrastructure.Repositories;
@@ -31,6 +32,9 @@ namespace Infrastructure
 
             // Register Dispatcher
             services.AddScoped<IDispatcher, Dispatcher>();
+
+            // Register Pipeline Behaviors (order matters!)
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             // Register all Command Handlers automatically
             services.Scan(scan => scan
