@@ -1,0 +1,41 @@
+using Application.Abstractions;
+using Application.Abstractions.Persistence;
+using Application.Customers.Dtos;
+using Domain.Entities;
+using Application.Common.Exceptions;
+
+namespace Application.Customers.Commands.Update
+{
+    public sealed class UpdateCustomerHandler : ICommandHandler<UpdateCustomerCommand, CustomerDto>
+    {
+        private readonly ICustomerRepository _customerRepository;
+        private readonly IUnitOfWork _unitOfWork;
+
+        public UpdateCustomerHandler(ICustomerRepository customerRepository, IUnitOfWork unitOfWork)
+        {
+            this._customerRepository = customerRepository;
+            this._unitOfWork = unitOfWork;
+        }
+
+        public async Task<CustomerDto> Handle(UpdateCustomerCommand command, CancellationToken cancellationToken)
+        {
+            Customer? customer = await this._customerRepository.GetByIdAsync(command.Id, cancellationToken);
+
+            if (customer is null)
+            {
+                throw new NotFoundException($"Customer with id {command.Id} not found.");
+            }
+
+            customer.FirstName = command.FirstName;
+            customer.LastName = command.LastName;
+            customer.Email = command.Email;
+            customer.PhoneNumber = command.PhoneNumber;
+            customer.UpdatedAt = DateTime.UtcNow;
+
+            await this._customerRepository.UpdateAsync(customer, cancellationToken);
+            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return new CustomerDto(customer);
+        }
+    }
+}

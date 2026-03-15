@@ -1,10 +1,9 @@
 ﻿using Application.Abstractions;
-using Application.Categories.Commands.Update;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Categories.Dtos
+namespace Application.Categories.Commands.Update
 {
     public sealed class UpdateCategoryValidator : IValidator<UpdateCategoryCommand>
     {

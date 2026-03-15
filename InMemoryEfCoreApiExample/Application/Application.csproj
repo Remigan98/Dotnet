@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <Folder Include="Common\Mapping\" />
-    <Folder Include="Customers\" />
+    <Folder Include="Customers\Queries\" />
     <Folder Include="Orders\" />
   </ItemGroup>
 

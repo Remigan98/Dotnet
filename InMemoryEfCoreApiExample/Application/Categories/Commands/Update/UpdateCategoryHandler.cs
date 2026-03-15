@@ -1,10 +1,10 @@
 ﻿using Application.Abstractions;
 using Application.Abstractions.Persistence;
-using Application.Categories.Commands.Update;
+using Application.Categories.Dtos;
 using Application.Common.Exceptions;
 using Domain.Entities;
 
-namespace Application.Categories.Dtos
+namespace Application.Categories.Commands.Update
 {
     public sealed class UpdateCategoryHandler : ICommandHandler<UpdateCategoryCommand, CategoryDto>
     {
