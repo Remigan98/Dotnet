@@ -5,7 +5,6 @@ using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-
 namespace Infrastructure.Data
 {
     public static class SeedData

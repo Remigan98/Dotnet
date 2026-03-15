@@ -30,9 +30,24 @@ namespace Infrastructure.Repositories
             return await this._dbContext.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
+        public async Task UpdateAsync(Product product, CancellationToken cancellationToken)
+        {
+            await Task.Run(() => this._dbContext.Products.Update(product), cancellationToken);
+        }
+
         public async Task DeleteAsync(Product product)
         {
             await Task.Run(() => this._dbContext.Products.Remove(product));
+        }
+
+        public async Task<Product?> GetById(int id, CancellationToken cancellationToken)
+        {
+            return await this._dbContext.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        }
+
+        public async Task<IEnumerable<Product>> GetAll(CancellationToken cancellationToken)
+        {
+            return await this._dbContext.Products.ToListAsync(cancellationToken);
         }
     }
 }

@@ -5,9 +5,12 @@ using System.Text;
 
 namespace Domain.Enums
 {
-    public class OrderStatus : BaseEntity
+    public enum OrderStatus
     {
-        public string Name { get; set; } = default!;
-        public string Description { get; set; } = default!;
+        Pending = 0,
+        Confirmed = 1,
+        Shipped = 2,
+        Delivered = 3,
+        Cancelled = 4
     }
 }

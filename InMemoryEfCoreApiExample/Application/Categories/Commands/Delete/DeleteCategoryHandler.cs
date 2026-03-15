@@ -28,7 +28,7 @@ namespace Application.Categories.Commands.Delete
                 throw new NotFoundException($"Category with id {command.id} not found.");
             }
 
-            await _categoryRepository.DeleteAsync(category, cancellationToken);
+            _categoryRepository.Delete(category);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return true;

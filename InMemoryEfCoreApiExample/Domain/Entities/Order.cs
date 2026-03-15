@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,6 +12,7 @@ namespace Domain.Entities
         public Customer Customer { get; set; } = default!;
         public DateTime OrderDate { get; set; }
         public decimal TotalAmount { get; set; }
+        public OrderStatus Status { get; set; } = OrderStatus.Pending;
         public List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     }
 }
