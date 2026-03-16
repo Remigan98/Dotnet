@@ -19,7 +19,7 @@ namespace Application.Products.Queries.GetProductById
 
         public async Task<ProductDto> Handle(GetProductByIdQuery command, CancellationToken cancellationToken)
         {
-            Product? product = await this._repository.GetById(command.Id, cancellationToken);
+            Product? product = await this._repository.GetByIdAsync(command.Id, cancellationToken);
 
             if (product == null)
             {

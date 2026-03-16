@@ -28,7 +28,7 @@ namespace Application.Products.Commands.Delete
                 throw new NotFoundException($"Product with id {command.ProductId} not found.");
             }
 
-            await this._productRepository.DeleteAsync(product);
+            this._productRepository.Delete(product);
             await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
             return true;

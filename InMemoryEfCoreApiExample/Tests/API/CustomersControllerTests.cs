@@ -24,7 +24,7 @@ namespace Tests.API
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            _client.Dispose();
+            _client?.Dispose();
             _factory.Dispose();
         }
 

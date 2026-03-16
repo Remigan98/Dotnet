@@ -12,8 +12,6 @@ namespace Application.Abstractions.Persistence
         Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken);
         Task UpdateAsync(Product product, CancellationToken cancellationToken);
-        Task DeleteAsync(Product product);
-        Task<Product?> GetById(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<Product>> GetAll(CancellationToken cancellationToken);
+        void Delete(Product product);
     }
 }

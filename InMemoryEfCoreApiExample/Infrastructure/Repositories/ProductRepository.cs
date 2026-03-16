@@ -35,9 +35,9 @@ namespace Infrastructure.Repositories
             await Task.Run(() => this._dbContext.Products.Update(product), cancellationToken);
         }
 
-        public async Task DeleteAsync(Product product)
+        public void Delete(Product product)
         {
-            await Task.Run(() => this._dbContext.Products.Remove(product));
+            this._dbContext.Products.Remove(product);
         }
 
         public async Task<Product?> GetById(int id, CancellationToken cancellationToken)

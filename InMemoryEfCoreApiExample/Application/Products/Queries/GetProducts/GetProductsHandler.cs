@@ -15,7 +15,7 @@ namespace Application.Products.Queries.GetProducts
 
         public async Task<IEnumerable<ProductDto>> Handle(GetProductsQuery command, CancellationToken cancellationToken)
         {
-            IEnumerable<Product> products = await this._repository.GetAll(cancellationToken);
+            IEnumerable<Product> products = await this._repository.GetAllAsync(cancellationToken);
             return products.Select(p => new ProductDto(p));
         }
     }

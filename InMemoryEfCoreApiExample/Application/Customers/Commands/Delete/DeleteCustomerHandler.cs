@@ -26,6 +26,7 @@ namespace Application.Customers.Commands.Delete
             }
 
             this._customerRepository.Delete(customer);
+            await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
             customer = await this._customerRepository.GetByIdAsync(command.id, cancellationToken);
 
