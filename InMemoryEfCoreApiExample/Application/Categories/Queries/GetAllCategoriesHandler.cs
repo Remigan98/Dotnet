@@ -20,6 +20,7 @@ namespace Application.Categories.Queries
 
             return categories.Select(c => new CategoryDto
             {
+                Id = c.Id,
                 Name = c.Name,
                 Description = c.Description
             }).ToList();

@@ -48,13 +48,8 @@ namespace API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<CategoryDto>> Update(int id, [FromBody] UpdateCategoryCommand command, CancellationToken cancellationToken)
+        public async Task<ActionResult<CategoryDto>> Update([FromBody] UpdateCategoryCommand command, CancellationToken cancellationToken)
         {
-            if (id != command.Id)
-            {
-                return BadRequest("ID mismatch");
-            }
-
             CategoryDto category = await _dispatcher.DispatchAsync(command, cancellationToken);
             return Ok(category);
         }

@@ -6,5 +6,5 @@ using System.Text;
 
 namespace Application.Categories.Commands.Update
 {
-    public sealed record UpdateCategoryCommand(int Id, CategoryDto CategoryDto) : ICommand<CategoryDto>;
+    public sealed record UpdateCategoryCommand(CategoryDto CategoryDto) : ICommand<CategoryDto>;
 }

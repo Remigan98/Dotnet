@@ -19,11 +19,11 @@ namespace Application.Categories.Commands.Update
 
         public async Task<CategoryDto> Handle(UpdateCategoryCommand command, CancellationToken cancellationToken)
         {
-            Category? category = await _repository.GetByIdAsync(command.Id, cancellationToken);
+            Category? category = await _repository.GetByIdAsync(command.CategoryDto.Id, cancellationToken);
 
             if (category == null)
             {
-                throw new NotFoundException($"Category with id {command.Id} not found.");
+                throw new NotFoundException($"Category with id {command.CategoryDto.Id} not found.");
             }
 
             Category? nameCheckCategory = await _repository.GetByNameAsync(command.CategoryDto.Name, cancellationToken);
@@ -41,6 +41,7 @@ namespace Application.Categories.Commands.Update
 
             return new CategoryDto
             {
+                Id = category.Id,
                 Name = category.Name,
                 Description = category.Description
             };

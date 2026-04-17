@@ -26,6 +26,7 @@ namespace Application.Customers.Dtos
         public CustomerDto(CustomerDto copy)
         {
             ArgumentNullException.ThrowIfNull(copy);
+
             Id = copy.Id;
             FirstName = copy.FirstName;
             LastName = copy.LastName;
@@ -36,6 +37,7 @@ namespace Application.Customers.Dtos
         public CustomerDto(Domain.Entities.Customer customer)
         {
             ArgumentNullException.ThrowIfNull(customer);
+
             Id = customer.Id;
             FirstName = customer.FirstName;
             LastName = customer.LastName;

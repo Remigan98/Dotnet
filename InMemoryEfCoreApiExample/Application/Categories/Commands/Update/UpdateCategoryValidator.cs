@@ -11,15 +11,17 @@ namespace Application.Categories.Commands.Update
         {
             ArgumentNullException.ThrowIfNull(instance);
 
-            if (instance.Id <= 0)
+            if (instance.CategoryDto.Id <= 0)
             {
-                throw new ArgumentException("Id must be greater than zero.", nameof(instance.Id));
+                throw new ArgumentException("Id must be greater than zero.", nameof(instance.CategoryDto.Id));
             }
+
             if (instance.CategoryDto is null)
             {
                 throw new ArgumentNullException(nameof(instance.CategoryDto), "CategoryDto cannot be null.");
             }
-             if (string.IsNullOrWhiteSpace(instance.CategoryDto.Name))
+
+            if (string.IsNullOrWhiteSpace(instance.CategoryDto.Name))
             {
                 throw new ArgumentException("Name cannot be null or whitespace.", nameof(instance.CategoryDto.Name));
             }

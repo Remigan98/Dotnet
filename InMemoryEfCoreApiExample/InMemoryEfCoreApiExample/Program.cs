@@ -18,7 +18,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 WebApplication app = builder.Build();
 
 // Seed the database
-SeedData.Initialize(app.Services);
+await SeedData.Initialize(app.Services);
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

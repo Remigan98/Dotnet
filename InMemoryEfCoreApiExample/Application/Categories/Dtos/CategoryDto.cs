@@ -19,13 +19,13 @@ namespace Application.Categories.Dtos
             Description = description;
         }
 
-        public CategoryDto(CategoryDto copy)
+        public CategoryDto(CategoryDto dto)
         {
-            ArgumentNullException.ThrowIfNull(copy);
+            ArgumentNullException.ThrowIfNull(dto);
 
-            Id = copy.Id;
-            Name = copy.Name;
-            Description = copy.Description;
+            Id = dto.Id;
+            Name = dto.Name;
+            Description = dto.Description;
         }
 
         public CategoryDto(Category category)
