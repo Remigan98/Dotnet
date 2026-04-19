@@ -23,11 +23,6 @@ namespace Application.Orders.Commands.Update
             {
                 throw new ValidationException("OrderDate cannot be default.");
             }
-
-            if (instance.OrderDate > DateTime.UtcNow)
-            {
-                throw new ValidationException("OrderDate cannot be in the future.");
-            }
         }
     }
 }

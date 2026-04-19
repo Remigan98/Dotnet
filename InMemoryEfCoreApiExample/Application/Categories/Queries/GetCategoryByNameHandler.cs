@@ -26,6 +26,7 @@ namespace Application.Categories.Queries
 
             return new CategoryDto
             {
+                Id = category.Id,
                 Name = category.Name,
                 Description = category.Description
             };

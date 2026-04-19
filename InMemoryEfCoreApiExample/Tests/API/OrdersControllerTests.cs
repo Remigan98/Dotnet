@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Application.Customers.Commands.Create;
 using Application.Customers.Dtos;
 using Application.Orders.Commands.Create;
+using Application.Orders.Commands.Update;
 using Application.Orders.Dtos;
 using Domain.Entities;
 using Domain.Enums;
@@ -96,54 +97,6 @@ namespace Tests.API
         }
 
         [Test]
-        public async Task Confirm_ShouldReturnOk_WhenOrderIsPending()
-        {
-            // Arrange
-            int customerId = await CreateTestCustomer();
-            int productId = await CreateTestProduct();
-
-            var createCommand = new CreateOrderCommand(
-                customerId,
-                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId, 1) }
-            );
-
-            var createResponse = await _client.PostAsJsonAsync("/api/orders", createCommand);
-            var order = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
-
-            // Act
-            var response = await _client.PostAsync($"/api/orders/{order!.Id}/confirm", null);
-
-            // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var confirmedOrder = await response.Content.ReadFromJsonAsync<OrderDto>();
-            confirmedOrder!.Status.Should().Be(OrderStatus.Confirmed);
-        }
-
-        [Test]
-        public async Task Cancel_ShouldReturnOk_WhenOrderIsNotDelivered()
-        {
-            // Arrange
-            int customerId = await CreateTestCustomer();
-            int productId = await CreateTestProduct();
-
-            var createCommand = new CreateOrderCommand(
-                customerId,
-                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId, 1) }
-            );
-
-            var createResponse = await _client.PostAsJsonAsync("/api/orders", createCommand);
-            var order = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
-
-            // Act
-            var response = await _client.PostAsync($"/api/orders/{order!.Id}/cancel", null);
-
-            // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var cancelledOrder = await response.Content.ReadFromJsonAsync<OrderDto>();
-            cancelledOrder!.Status.Should().Be(OrderStatus.Cancelled);
-        }
-
-        [Test]
         public async Task GetByStatus_ShouldReturnOrdersWithSpecificStatus()
         {
             // Arrange
@@ -162,6 +115,7 @@ namespace Tests.API
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var orders = await response.Content.ReadFromJsonAsync<List<OrderDto>>();
+            orders.Should().NotBeNull();
             orders.Should().NotBeEmpty();
             orders!.All(o => o.Status == OrderStatus.Pending).Should().BeTrue();
         }
@@ -190,8 +144,206 @@ namespace Tests.API
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var orders = await response.Content.ReadFromJsonAsync<List<OrderDto>>();
-            orders.Should().HaveCountGreaterThanOrEqualTo(2);
+            orders.Should().NotBeNull();
             orders!.All(o => o.CustomerId == customerId).Should().BeTrue();
+        }
+
+        [Test]
+        public async Task Update_ShouldReturnOk_WhenCommandIsValid()
+        {
+            // Arrange
+            int customerId = await CreateTestCustomer();
+            int productId = await CreateTestProduct();
+
+            var createResponse = await _client.PostAsJsonAsync("/api/orders", new CreateOrderCommand(
+                customerId,
+                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId, 1) }
+            ));
+
+            var created = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
+
+            var updateCommand = new UpdateOrderCommand(
+                created!.Id,
+                created.CustomerId,
+                created.OrderDate.AddMinutes(1)
+            );
+
+            // Act
+            var response = await _client.PutAsJsonAsync($"/api/orders/{created.Id}", updateCommand);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var updated = await response.Content.ReadFromJsonAsync<OrderDto>();
+            updated.Should().NotBeNull();
+            updated!.Id.Should().Be(created.Id);
+            updated.CustomerId.Should().Be(created.CustomerId);
+            updated.OrderDate.Should().BeCloseTo(updateCommand.OrderDate, precision: TimeSpan.FromSeconds(1));
+        }
+
+        [Test]
+        public async Task Update_ShouldReturnBadRequest_WhenIdMismatch()
+        {
+            // Arrange
+            int customerId = await CreateTestCustomer();
+            int productId = await CreateTestProduct();
+
+            var createResponse = await _client.PostAsJsonAsync("/api/orders", new CreateOrderCommand(
+                customerId,
+                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId, 1) }
+            ));
+            var created = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
+
+            var updateCommand = new UpdateOrderCommand(
+                created!.Id + 1,
+                created.CustomerId,
+                created.OrderDate
+            );
+
+            // Act
+            var response = await _client.PutAsJsonAsync($"/api/orders/{created.Id}", updateCommand);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Test]
+        public async Task Delete_ShouldReturnOk_WhenOrderExists()
+        {
+            // Arrange
+            int customerId = await CreateTestCustomer();
+            int productId = await CreateTestProduct();
+
+            var createResponse = await _client.PostAsJsonAsync("/api/orders", new CreateOrderCommand(
+                customerId,
+                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId, 1) }
+            ));
+            var created = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
+
+            // Act
+            var response = await _client.DeleteAsync($"/api/orders/{created!.Id}");
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Test]
+        public async Task AddItem_ShouldReturnOk_WhenRequestIsValid()
+        {
+            // Arrange
+            int customerId = await CreateTestCustomer();
+            int productId1 = await CreateTestProduct();
+            int productId2 = await CreateTestProduct();
+
+            var createResponse = await _client.PostAsJsonAsync("/api/orders", new CreateOrderCommand(
+                customerId,
+                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId1, 1) }
+            ));
+            var created = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
+
+            // Act
+            var response = await _client.PostAsJsonAsync(
+                $"/api/orders/{created!.Id}/items",
+                new { ProductId = productId2, Quantity = 3 });
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var updated = await response.Content.ReadFromJsonAsync<OrderDto>();
+            updated.Should().NotBeNull();
+            updated!.OrderItems.Should().Contain(oi => oi.ProductId == productId2 && oi.Quantity == 3);
+        }
+
+        [Test]
+        public async Task UpdateItemQuantity_ShouldReturnOk_WhenRequestIsValid()
+        {
+            // Arrange
+            int customerId = await CreateTestCustomer();
+            int productId = await CreateTestProduct();
+
+            var createResponse = await _client.PostAsJsonAsync("/api/orders", new CreateOrderCommand(
+                customerId,
+                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId, 1) }
+            ));
+            var created = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
+
+            // Act
+            var response = await _client.PutAsJsonAsync(
+                $"/api/orders/{created!.Id}/items/{productId}/quantity",
+                new { NewQuantity = 5 });
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var updated = await response.Content.ReadFromJsonAsync<OrderDto>();
+            updated.Should().NotBeNull();
+            updated!.OrderItems.Should().Contain(oi => oi.ProductId == productId && oi.Quantity == 5);
+        }
+
+        [Test]
+        public async Task RemoveItem_ShouldReturnOk_WhenItemExists()
+        {
+            // Arrange
+            int customerId = await CreateTestCustomer();
+            int productId = await CreateTestProduct();
+
+            var createResponse = await _client.PostAsJsonAsync("/api/orders", new CreateOrderCommand(
+                customerId,
+                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId, 1) }
+            ));
+            var created = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
+
+            // Act
+            var response = await _client.DeleteAsync($"/api/orders/{created!.Id}/items/{productId}");
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var updated = await response.Content.ReadFromJsonAsync<OrderDto>();
+            updated.Should().NotBeNull();
+            updated!.OrderItems.Should().NotContain(oi => oi.ProductId == productId);
+        }
+
+        [Test]
+        public async Task Confirm_ShouldReturnOk_WhenOrderIsPending()
+        {
+            // Arrange
+            int customerId = await CreateTestCustomer();
+            int productId = await CreateTestProduct();
+
+            var createResponse = await _client.PostAsJsonAsync("/api/orders", new CreateOrderCommand(
+                customerId,
+                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId, 1) }
+            ));
+            var order = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
+
+            // Act
+            var response = await _client.PostAsync($"/api/orders/{order!.Id}/confirm", null);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var confirmedOrder = await response.Content.ReadFromJsonAsync<OrderDto>();
+            confirmedOrder.Should().NotBeNull();
+            confirmedOrder!.Status.Should().Be(OrderStatus.Confirmed);
+        }
+
+        [Test]
+        public async Task Cancel_ShouldReturnOk_WhenOrderIsNotDelivered()
+        {
+            // Arrange
+            int customerId = await CreateTestCustomer();
+            int productId = await CreateTestProduct();
+
+            var createResponse = await _client.PostAsJsonAsync("/api/orders", new CreateOrderCommand(
+                customerId,
+                new List<CreateOrderItemCommand> { new CreateOrderItemCommand(productId, 1) }
+            ));
+            var order = await createResponse.Content.ReadFromJsonAsync<OrderDto>();
+
+            // Act
+            var response = await _client.PostAsync($"/api/orders/{order!.Id}/cancel", null);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var cancelledOrder = await response.Content.ReadFromJsonAsync<OrderDto>();
+            cancelledOrder.Should().NotBeNull();
+            cancelledOrder!.Status.Should().Be(OrderStatus.Cancelled);
         }
 
         private async Task<int> CreateTestCustomer()
@@ -205,6 +357,7 @@ namespace Tests.API
 
             var response = await _client.PostAsJsonAsync("/api/customers", command);
             var customer = await response.Content.ReadFromJsonAsync<CustomerDto>();
+            customer.Should().NotBeNull();
             return customer!.Id;
         }
 

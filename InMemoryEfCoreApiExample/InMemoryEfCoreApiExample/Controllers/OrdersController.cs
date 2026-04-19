@@ -75,7 +75,6 @@ namespace API.Controllers
 
             OrderDto order = await _dispatcher.DispatchAsync(command, cancellationToken);
 
-
             return Ok(order);
         }
 

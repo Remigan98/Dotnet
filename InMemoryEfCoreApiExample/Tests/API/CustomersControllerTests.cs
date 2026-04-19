@@ -94,6 +94,25 @@ namespace Tests.API
         }
 
         [Test]
+        public async Task GetByEmail_ShouldReturnOk_WhenCustomerExists()
+        {
+            // Arrange
+            var email = $"byemail.{Guid.NewGuid()}@test.com";
+            var createCommand = new CreateCustomerCommand("Email", "Lookup", email, "1234567890");
+            var createResponse = await _client.PostAsJsonAsync("/api/customers", createCommand);
+            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            // Act
+            var response = await _client.GetAsync($"/api/customers/email/{email}");
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var customer = await response.Content.ReadFromJsonAsync<CustomerDto>();
+            customer.Should().NotBeNull();
+            customer!.Email.Should().Be(email);
+        }
+
+        [Test]
         public async Task Update_ShouldReturnOk_WhenCustomerIsValid()
         {
             // Arrange - Create a customer first
@@ -118,6 +137,30 @@ namespace Tests.API
             var updatedCustomer = await response.Content.ReadFromJsonAsync<CustomerDto>();
             updatedCustomer!.FirstName.Should().Be("Updated");
             updatedCustomer.PhoneNumber.Should().Be("0987654321");
+        }
+
+        [Test]
+        public async Task Update_ShouldReturnBadRequest_WhenIdMismatch()
+        {
+            // Arrange
+            var email = $"mismatch.{Guid.NewGuid()}@test.com";
+            var createResponse = await _client.PostAsJsonAsync("/api/customers",
+                new CreateCustomerCommand("Mismatch", "Case", email, "1234567890"));
+            var createdCustomer = await createResponse.Content.ReadFromJsonAsync<CustomerDto>();
+
+            var updateCommand = new UpdateCustomerCommand(
+                createdCustomer!.Id + 1,
+                "Updated",
+                "Name",
+                email,
+                "0987654321"
+            );
+
+            // Act
+            var response = await _client.PutAsJsonAsync($"/api/customers/{createdCustomer.Id}", updateCommand);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         [Test]
