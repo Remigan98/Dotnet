@@ -1,0 +1,25 @@
+﻿@page "/"
+
+@using DemoBlazorHost.Components.Reusable
+
+
+<PageTitle>Home</PageTitle>
+
+<h1>Welcome to the In-memory CQRS backend demo page!</h1>
+
+<div class="card-container">
+    <Card Title="Test with Blazor interface and pre-configured actions (Image)"
+              OnClick="@(() => RunBlazorTest())" />
+
+    <Card Title="Test with Swagger"
+              OnClick="@(() => RunSwaggerTest())" />
+
+    <Card Title="Try with Postman"
+              OnClick="@(() => RunPostmanTest())" />
+</div>
+
+@code {
+    void RunBlazorTest() => Console.WriteLine("Blazor test started");
+    void RunSwaggerTest() => Console.WriteLine("Swagger test started");
+    void RunPostmanTest() => Console.WriteLine("Postman test started");
+}

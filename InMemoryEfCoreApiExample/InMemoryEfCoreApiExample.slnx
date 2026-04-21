@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="Application/Application.csproj" />
+  <Project Path="DemoBlazorHost/DemoBlazorHost.csproj" Id="0d051b42-5822-4d68-973d-c782489bf48e" />
   <Project Path="Domain/Domain.csproj" />
   <Project Path="Infrastructure/Infrastructure.csproj" />
   <Project Path="InMemoryEfCoreApiExample/Api.csproj" />

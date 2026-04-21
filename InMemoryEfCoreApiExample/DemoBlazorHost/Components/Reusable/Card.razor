@@ -1,0 +1,15 @@
+﻿<div class="card">
+    <div class="card-header">
+        @Title
+    </div>
+
+    <button class="card-button" @onclick="OnClick">
+        Start
+    </button>
+</div>
+
+@code 
+{
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public EventCallback OnClick { get; set; }
+}
