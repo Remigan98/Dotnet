@@ -3,5 +3,72 @@
     display: flex;
     gap: 15px;
     justify-content: center;
+    align-items: stretch;
     margin-top: 15px;
+
+    /* ~60% of viewport height on large screens */
+    height: 60vh;
+}
+
+/* Style child component markup from the parent (CSS isolation) */
+.card-container ::deep .card
+{
+    height: 100%;
+}
+
+@media (max-width: 768px)
+{
+    .card-container
+    {
+        /* 1 card per row, stacked */
+        flex-direction: column;
+        height: auto;
+        align-items: center;
+    }
+
+    .card-container ::deep .card
+    {
+        /* fill horizontally on small screens */
+        width: min(100%, 520px);
+        height: auto;
+    }
+}
+
+.hero
+{
+    margin-top: 10px;
+    margin-bottom: 18px;
+    padding: 18px 18px 10px 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 1), rgba(0, 0, 0, .50) 95%);
+}
+
+.hero-title
+{
+    margin: 0 0 8px 0;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    color: #f2f2f2;
+}
+
+.hero-subtitle
+{
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+.hero-badge
+{
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 120, 255, 0.35);
+    background: rgba(0, 120, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    white-space: nowrap;
 }

@@ -1,15 +1,52 @@
-﻿<div class="card">
+﻿<div class="card" style="@CardStyle">
     <div class="card-header">
         @Title
     </div>
 
-    <button class="card-button" @onclick="OnClick">
-        Start
-    </button>
+    <div class="card-footer">
+        @if (!string.IsNullOrWhiteSpace(Description))
+        {
+            <div class="card-description">@Description</div>
+        }
+
+        <button class="card-button" @onclick="OnClick">
+            Start
+        </button>
+    </div>
 </div>
 
-@code 
+@code
 {
     [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Description { get; set; } = "";
     [Parameter] public EventCallback OnClick { get; set; }
+
+    // Pass a URL like "/images/my-bg.svg" (or any valid URL).
+    [Parameter] public string BackgroundImage { get; set; } = "";
+
+    // Any valid CSS color, e.g. "#00e5ff", "rgb(0 229 255)", "rgba(0,229,255,.8)"
+    [Parameter] public string IconGlowColor { get; set; } = "#00e5ff";
+
+    private string CardStyle
+    {
+        get
+        {
+            List<string> parts = [];
+
+            if (!string.IsNullOrWhiteSpace(BackgroundImage))
+            {
+                string safeUrl = BackgroundImage.Replace("\"", "%22");
+                parts.Add($"--card-bg-image: url(\"{safeUrl}\")");
+            }
+
+            if (!string.IsNullOrWhiteSpace(IconGlowColor))
+            {
+                // minimal safety to avoid breaking the style attribute
+                string safeColor = IconGlowColor.Replace(";", "").Replace("\"", "");
+                parts.Add($"--card-glow-color: {safeColor}");
+            }
+
+            return string.Join("; ", parts);
+        }
+    }
 }

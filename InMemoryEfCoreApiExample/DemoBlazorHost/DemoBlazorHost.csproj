@@ -12,8 +12,4 @@
     <ProjectReference Include="..\InMemoryEfCoreApiExample\Api.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\images\" />
-  </ItemGroup>
-
 </Project>

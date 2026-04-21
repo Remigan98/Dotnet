@@ -2,20 +2,37 @@
 
 @using DemoBlazorHost.Components.Reusable
 
-
 <PageTitle>Home</PageTitle>
 
-<h1>Welcome to the In-memory CQRS backend demo page!</h1>
+<header class="hero">
+    <h1 class="hero-title">
+        In-memory CQRS Backend Demo
+    </h1>
+
+    <p class="hero-subtitle">
+        Explore commands & queries end-to-end—try the Blazor UI, Swagger, or Postman.
+        <span class="hero-badge">No database required</span>
+    </p>
+</header>
 
 <div class="card-container">
     <Card Title="Test with Blazor interface and pre-configured actions (Image)"
-              OnClick="@(() => RunBlazorTest())" />
+          OnClick="@(() => RunBlazorTest())"
+          Description="Execute endpoints in pre-determined scenarios using the Blazor UI."
+          BackgroundImage="/images/cards/blazor.svg"
+          IconGlowColor="#512BD4" />
 
     <Card Title="Test with Swagger"
-              OnClick="@(() => RunSwaggerTest())" />
+          OnClick="@(() => RunSwaggerTest())"
+          Description="Browse and execute endpoints in the interactive OpenAPI UI."
+          BackgroundImage="/images/cards/swagger.svg"
+          IconGlowColor="#85ea2d" />
 
     <Card Title="Try with Postman"
-              OnClick="@(() => RunPostmanTest())" />
+          OnClick="@(() => RunPostmanTest())"
+          Description="Use the provided Postman collection to test endpoints in your own way."
+          BackgroundImage="/images/cards/postman.svg" 
+          IconGlowColor="#EF5B25" />
 </div>
 
 @code {

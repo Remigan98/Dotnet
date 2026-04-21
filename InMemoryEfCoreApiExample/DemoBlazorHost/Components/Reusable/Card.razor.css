@@ -1,26 +1,99 @@
-﻿.card 
+﻿.card
 {
-    width: 300px;
-    background: #1e1e1e;
+    position: relative;
+    overflow: hidden;
+
+    background-color: #1e1e1e;
+
     border-radius: 12px;
     padding: 20px;
     text-align: center;
     border: 1px solid #333;
+
     display: flex;
     flex-direction: column;
     gap: 20px;
+
+    flex: 1 1 320px;
+    min-width: 220px;
+
+    height: 100%;
+    box-sizing: border-box;
 }
 
-.card-header 
+/* The "icon"/image layer (works for SVGs too) */
+.card::after
 {
-    border: 1px solid #444;
-    padding: 40px 10px;
-    border-radius: 8px;
-    color: #ddd;
-    font-size: 1.1rem;
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background-image: var(--card-bg-image, none);
+    background-size: 65% 65%;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    transition: filter 180ms ease, transform 180ms ease;
+    z-index: 0;
 }
 
-.card-button 
+/* Glow on hover */
+.card:hover::after
+{
+    filter:
+        drop-shadow(0 0 10px var(--card-glow-color, rgba(0, 120, 255, 0.85)))
+        drop-shadow(0 0 22px var(--card-glow-color, rgba(0, 120, 255, 0.55)));
+    transform: scale(1.02);
+}
+
+/* Dark overlay so text stays readable over images */
+.card::before
+{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgb(70, 70, 70, 0,50);
+}
+
+.card > *
+{
+    position: relative;
+    z-index: 2;
+}
+
+@media (max-width: 768px)
+{
+    .card::after
+    {
+        background-size: 100% auto;
+    }
+}
+
+.card-header
+{
+    border: none;
+    padding: 40px 10px;
+    color: #ddd;
+    font-size: 1.5rem;
+}
+
+.card-footer
+{
+    border: none;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-description
+{
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 1.25rem;
+    line-height: 1.4;
+}
+
+.card-button
 {
     background: #0078ff;
     border: none;
@@ -28,10 +101,10 @@
     border-radius: 6px;
     color: white;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.7rem;
 }
 
-.test-card-button:hover 
+.card-button:hover
 {
     background: #0a6cd6;
 }
