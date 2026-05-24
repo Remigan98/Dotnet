@@ -1,0 +1,179 @@
+﻿<h3>CategoriesTab</h3>
+
+@using Application.Abstractions
+@using Application.Categories.Commands.Create
+@using Application.Categories.Commands.Delete
+@using Application.Categories.Commands.Update
+@using Application.Categories.Dtos
+@using Application.Categories.Queries
+
+@inject IDispatcher Dispatcher
+
+<div class="row g-4">
+    <!-- List -->
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>All Categories</strong>
+                <button class="btn btn-sm btn-outline-primary" @onclick="LoadCategories">↻ Refresh</button>
+            </div>
+            <div class="card-body p-0">
+                @if (Categories.Count == 0)
+                {
+                    <p class="p-3 text-muted">No categories found.</p>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Id</th><th>Name</th><th>Description</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (CategoryDto c in Categories)
+                            {
+                                <tr>
+                                    <td>@c.Id</td>
+                                    <td>@c.Name</td>
+                                    <td>@c.Description</td>
+                                    <td>
+                                        <button class="btn btn-xs btn-outline-secondary me-1" @onclick="() => BeginEdit(c)">Edit</button>
+                                        <button class="btn btn-xs btn-outline-danger"         @onclick="() => Delete(c.Id)">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Create / Edit + Look Up -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <strong>@(_editing == null ? "Create Category" : $"Edit Category #{_editing.Id}")</strong>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label class="form-label">Name</label>
+                    <input class="form-control" @bind="_name" placeholder="e.g. Beverages" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <input class="form-control" @bind="_description" placeholder="e.g. Drinks and juices" />
+                </div>
+                <div class="d-flex gap-2">
+                    @if (_editing == null)
+                    {
+                        <button class="btn btn-primary"   @onclick="Create">+ Create</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-success"   @onclick="Update">💾 Save</button>
+                        <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header"><strong>Look Up Category</strong></div>
+            <div class="card-body">
+                <div class="input-group mb-2">
+                    <input class="form-control" @bind="_lookupId" placeholder="ID" type="number" />
+                    <button class="btn btn-outline-primary" @onclick="LookupById">By Id</button>
+                </div>
+                <div class="input-group">
+                    <input class="form-control" @bind="_lookupName" placeholder="Name" />
+                    <button class="btn btn-outline-primary" @onclick="LookupByName">By Name</button>
+                </div>
+                @if (_lookedUp != null)
+                {
+                    <div class="alert alert-info mt-2 mb-0">
+                        <strong>#@_lookedUp.Id</strong> – @_lookedUp.Name: @_lookedUp.Description
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<CategoryDto>                          Categories         { get; set; } = default!;
+    [Parameter, EditorRequired] public EventCallback<(bool IsError, string Msg)> OnStatus           { get; set; }
+    [Parameter, EditorRequired] public EventCallback                              OnCategoriesChanged { get; set; }
+
+    private CategoryDto? _editing;
+    private CategoryDto? _lookedUp;
+    private string _name        = string.Empty;
+    private string _description = string.Empty;
+    private int    _lookupId;
+    private string _lookupName  = string.Empty;
+
+    private async Task LoadCategories()
+    {
+        try
+        {
+            Categories = (await Dispatcher.DispatchAsync(new GetAllCategoriesQuery())).ToList();
+            await OnCategoriesChanged.InvokeAsync();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task Create()
+    {
+        try
+        {
+            CategoryDto created = await Dispatcher.DispatchAsync(new CreateCategoryCommand(_name, _description));
+            await OnStatus.InvokeAsync((false, $"Category '{created.Name}' created (id={created.Id})."));
+            _name = _description = string.Empty;
+            await LoadCategories();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private void BeginEdit(CategoryDto c)
+    {
+        _editing     = c;
+        _name        = c.Name;
+        _description = c.Description;
+    }
+
+    private async Task Update()
+    {
+        if (_editing is null) return;
+        try
+        {
+            CategoryDto updated = await Dispatcher.DispatchAsync(
+                new UpdateCategoryCommand(_editing with { Name = _name, Description = _description }));
+            await OnStatus.InvokeAsync((false, $"Category #{updated.Id} updated."));
+            CancelEdit();
+            await LoadCategories();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private void CancelEdit() { _editing = null; _name = _description = string.Empty; }
+
+    private async Task Delete(int id)
+    {
+        try
+        {
+            await Dispatcher.DispatchAsync(new DeleteCategoryCommand(id));
+            await OnStatus.InvokeAsync((false, $"Category #{id} deleted."));
+            await LoadCategories();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task LookupById()
+    {
+        try   { _lookedUp = await Dispatcher.DispatchAsync(new GetCategoryByIdQuery(_lookupId)); }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); _lookedUp = null; }
+    }
+
+    private async Task LookupByName()
+    {
+        try   { _lookedUp = await Dispatcher.DispatchAsync(new GetCategoryByName(_lookupName)); }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); _lookedUp = null; }
+    }
+}

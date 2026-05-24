@@ -1,0 +1,179 @@
+﻿@using Application.Abstractions
+@using Application.Customers.Commands.Create
+@using Application.Customers.Commands.Delete
+@using Application.Customers.Commands.Update
+@using Application.Customers.Dtos
+@using Application.Customers.Queries
+
+@inject IDispatcher Dispatcher
+
+<h3>CustomersTab</h3>
+
+<div class="row g-4">
+    <!-- List -->
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>All Customers</strong>
+                <button class="btn btn-sm btn-outline-primary" @onclick="LoadCustomers">↻ Refresh</button>
+            </div>
+            <div class="card-body p-0">
+                @if (_customers.Count == 0)
+                {
+                    <p class="p-3 text-muted">No customers found.</p>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Id</th><th>Name</th><th>Email</th><th>Phone</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (CustomerDto c in _customers)
+                            {
+                                <tr>
+                                    <td>@c.Id</td>
+                                    <td>@c.FirstName @c.LastName</td>
+                                    <td>@c.Email</td>
+                                    <td>@c.PhoneNumber</td>
+                                    <td>
+                                        <button class="btn btn-xs btn-outline-secondary me-1" @onclick="() => BeginEdit(c)">Edit</button>
+                                        <button class="btn btn-xs btn-outline-danger"         @onclick="() => Delete(c.Id)">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Create / Edit + Look Up -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <strong>@(_editing == null ? "Create Customer" : $"Edit Customer #{_editing.Id}")</strong>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label class="form-label">First Name</label>
+                    <input class="form-control" @bind="_firstName" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Last Name</label>
+                    <input class="form-control" @bind="_lastName" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" @bind="_email" type="email" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input class="form-control" @bind="_phone" />
+                </div>
+                <div class="d-flex gap-2">
+                    @if (_editing == null)
+                    {
+                        <button class="btn btn-primary"   @onclick="Create">+ Create</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-success"   @onclick="Update">💾 Save</button>
+                        <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header"><strong>Look Up Customer</strong></div>
+            <div class="card-body">
+                <div class="input-group">
+                    <input class="form-control" @bind="_lookupEmail" placeholder="email@example.com" />
+                    <button class="btn btn-outline-primary" @onclick="LookupByEmail">By Email</button>
+                </div>
+                @if (_lookedUp != null)
+                {
+                    <div class="alert alert-info mt-2 mb-0">
+                        <strong>#@_lookedUp.Id</strong> – @_lookedUp.FirstName @_lookedUp.LastName (@_lookedUp.Email)
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public EventCallback<(bool IsError, string Msg)> OnStatus { get; set; }
+
+    private List<CustomerDto> _customers = new();
+    private CustomerDto? _editing;
+    private CustomerDto? _lookedUp;
+    private string _firstName   = string.Empty;
+    private string _lastName    = string.Empty;
+    private string _email       = string.Empty;
+    private string _phone       = string.Empty;
+    private string _lookupEmail = string.Empty;
+
+    protected override async Task OnInitializedAsync() => await LoadCustomers();
+
+    private async Task LoadCustomers()
+    {
+        try { _customers = (await Dispatcher.DispatchAsync(new GetAllCustomersQuery())).ToList(); }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task Create()
+    {
+        try
+        {
+            CustomerDto created = await Dispatcher.DispatchAsync(
+                new CreateCustomerCommand(_firstName, _lastName, _email, _phone));
+            await OnStatus.InvokeAsync((false, $"Customer '{created.FirstName} {created.LastName}' created (id={created.Id})."));
+            _firstName = _lastName = _email = _phone = string.Empty;
+            await LoadCustomers();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private void BeginEdit(CustomerDto c)
+    {
+        _editing   = c;
+        _firstName = c.FirstName;
+        _lastName  = c.LastName;
+        _email     = c.Email;
+        _phone     = c.PhoneNumber;
+    }
+
+    private async Task Update()
+    {
+        if (_editing is null) return;
+        try
+        {
+            CustomerDto updated = await Dispatcher.DispatchAsync(
+                new UpdateCustomerCommand(_editing.Id, _firstName, _lastName, _email, _phone));
+            await OnStatus.InvokeAsync((false, $"Customer #{updated.Id} updated."));
+            CancelEdit();
+            await LoadCustomers();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private void CancelEdit() { _editing = null; _firstName = _lastName = _email = _phone = string.Empty; }
+
+    private async Task Delete(int id)
+    {
+        try
+        {
+            await Dispatcher.DispatchAsync(new DeleteCustomerCommand(id));
+            await OnStatus.InvokeAsync((false, $"Customer #{id} deleted."));
+            await LoadCustomers();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task LookupByEmail()
+    {
+        try   { _lookedUp = await Dispatcher.DispatchAsync(new GetCustomerByEmailQuery(_lookupEmail)); }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); _lookedUp = null; }
+    }
+}

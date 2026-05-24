@@ -1,0 +1,102 @@
+﻿@page "/blazor-demo-home"
+@rendermode InteractiveServer
+
+@using Application.Abstractions
+@using Application.Categories.Dtos
+@using Application.Categories.Queries
+@using Application.Customers.Dtos
+@using Application.Customers.Queries
+@using Application.Products.Dtos
+@using Application.Products.Queries
+@using DemoBlazorHost.Components.BlazorDemo
+
+@inject IDispatcher Dispatcher
+
+<h2>🛒 Grocery Store – Interactive Demo</h2>
+<p class="text-muted">Use the tabs below to explore and test all CRUD operations and order workflows against the in-memory database.</p>
+
+<!-- Tab navigation -->
+<ul class="nav nav-tabs mb-3">
+    @foreach (string tab in _tabs)
+    {
+        <li class="nav-item">
+            <button class="nav-link @(_activeTab == tab ? "active" : "")" @onclick="() => SetTab(tab)">@tab</button>
+        </li>
+    }
+</ul>
+
+@if (!string.IsNullOrEmpty(_statusMessage))
+{
+    <div class="alert @(_isError ? "alert-danger" : "alert-success") alert-dismissible">
+        @_statusMessage
+        <button type="button" class="btn-close" @onclick="() => _statusMessage = string.Empty"></button>
+    </div>
+}
+
+@switch (_activeTab)
+{
+    case "Categories":
+        <CategoriesTab Categories="@_categories"
+                       OnStatus="@HandleStatus"
+                       OnCategoriesChanged="@LoadCategories" />
+        break;
+
+    case "Products":
+        <ProductsTab Categories="@_categories"
+                     OnStatus="@HandleStatus" />
+        break;
+
+    case "Customers":
+        <CustomersTab OnStatus="@HandleStatus" />
+        break;
+
+    case "Orders":
+        <OrdersTab Customers="@_customers"
+                   Products="@_products"
+                   OnStatus="@HandleStatus" />
+        break;
+}
+
+@code {
+    private static readonly string[] _tabs = ["Categories", "Products", "Customers", "Orders"];
+
+    private string _activeTab     = "Categories";
+    private string _statusMessage = string.Empty;
+    private bool   _isError;
+
+    private List<CategoryDto> _categories = new();
+    private List<ProductDto>  _products   = new();
+    private List<CustomerDto> _customers  = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadCategories(), LoadProducts(), LoadCustomers());
+    }
+
+    private void SetTab(string tab)
+    {
+        _activeTab     = tab;
+        _statusMessage = string.Empty;
+    }
+
+    private void HandleStatus((bool IsError, string Msg) status)
+    {
+        _isError       = status.IsError;
+        _statusMessage = status.Msg;
+    }
+
+    private async Task LoadCategories()
+    {
+        _categories = (await Dispatcher.DispatchAsync(new GetAllCategoriesQuery())).ToList();
+    }
+
+    private async Task LoadProducts()
+    {
+        _products = (await Dispatcher.DispatchAsync(new GetAllProductsQuery())).ToList();
+    }
+
+    private async Task LoadCustomers()
+    {
+        _customers = (await Dispatcher.DispatchAsync(new GetAllCustomersQuery())).ToList();
+    }
+}

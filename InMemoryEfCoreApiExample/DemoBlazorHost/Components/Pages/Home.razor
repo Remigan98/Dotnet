@@ -1,6 +1,7 @@
 ﻿@page "/"
 
 @using DemoBlazorHost.Components.Reusable
+@inject NavigationManager NavigationManager
 
 <PageTitle>Home</PageTitle>
 
@@ -36,7 +37,7 @@
 </div>
 
 @code {
-    void RunBlazorTest() => Console.WriteLine("Blazor test started");
+    void RunBlazorTest() => NavigationManager.NavigateTo("/blazor-demo-home", false);
     void RunSwaggerTest() => Console.WriteLine("Swagger test started");
     void RunPostmanTest() => Console.WriteLine("Postman test started");
 }

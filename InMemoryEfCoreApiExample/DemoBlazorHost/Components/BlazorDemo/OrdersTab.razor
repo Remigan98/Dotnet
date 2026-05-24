@@ -1,0 +1,340 @@
+﻿@using Application.Abstractions
+@using Application.Customers.Dtos
+@using Application.Orders.Commands.AddItem
+@using Application.Orders.Commands.Cancel
+@using Application.Orders.Commands.Confirm
+@using Application.Orders.Commands.Create
+@using Application.Orders.Commands.Delete
+@using Application.Orders.Commands.RemoveItem
+@using Application.Orders.Commands.UpdateItemQuantity
+@using Application.Orders.Dtos
+@using Application.Orders.Queries
+@using Application.Products.Dtos
+@using Domain.Enums
+
+@inject IDispatcher Dispatcher
+
+<h3>OrdersTab</h3>
+
+<div class="row g-4">
+    <!-- Order list -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>All Orders</strong>
+                <div class="d-flex gap-2 align-items-center">
+                    <select class="form-select form-select-sm" style="width:auto"
+                            @bind="_statusFilter" @bind:after="ApplyStatusFilter">
+                        <option value="-1">All statuses</option>
+                        @foreach (OrderStatus s in Enum.GetValues<OrderStatus>())
+                        {
+                            <option value="@((int)s)">@s</option>
+                        }
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="LoadOrders">↻ Refresh</button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                @if (_orders.Count == 0)
+                {
+                    <p class="p-3 text-muted">No orders found.</p>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Id</th><th>Customer</th><th>Date</th>
+                                <th>Total</th><th>Status</th><th>Items</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (OrderDto o in _orders)
+                            {
+                                <tr>
+                                    <td>@o.Id</td>
+                                    <td>@o.CustomerName</td>
+                                    <td>@o.OrderDate.ToString("yyyy-MM-dd")</td>
+                                    <td>$@o.TotalAmount.ToString("0.00")</td>
+                                    <td><span class="badge @StatusBadge(o.Status)">@o.Status</span></td>
+                                    <td>@o.OrderItems.Count</td>
+                                    <td>
+                                        <button class="btn btn-xs btn-outline-info me-1"    @onclick="() => SelectOrder(o)">Details</button>
+                                        @if (o.Status == OrderStatus.Pending)
+                                        {
+                                            <button class="btn btn-xs btn-outline-success me-1" @onclick="() => ConfirmOrder(o.Id)">Confirm</button>
+                                        }
+                                        @if (o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Delivered)
+                                        {
+                                            <button class="btn btn-xs btn-outline-warning me-1" @onclick="() => CancelOrder(o.Id)">Cancel</button>
+                                        }
+                                        <button class="btn btn-xs btn-outline-danger" @onclick="() => DeleteOrder(o.Id)">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Order -->
+    <div class="col-md-5">
+        <div class="card h-100">
+            <div class="card-header"><strong>Create New Order</strong></div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label class="form-label">Customer</label>
+                    <select class="form-select" @bind="_newCustomerId">
+                        <option value="0">— select customer —</option>
+                        @foreach (CustomerDto c in Customers)
+                        {
+                            <option value="@c.Id">@c.FirstName @c.LastName</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Add Item</label>
+                    <div class="input-group">
+                        <select class="form-select" @bind="_newProductId">
+                            <option value="0">— product —</option>
+                            @foreach (ProductDto p in Products)
+                            {
+                                <option value="@p.Id">@p.Name ($@p.Price.ToString("0.00"))</option>
+                            }
+                        </select>
+                        <input class="form-control" style="max-width:80px" type="number" min="1" @bind="_newQty" />
+                        <button class="btn btn-outline-secondary" @onclick="AddNewOrderItem">+</button>
+                    </div>
+                </div>
+                @if (_newItems.Count > 0)
+                {
+                    <ul class="list-group list-group-flush mb-2">
+                        @foreach (CreateOrderItemCommand item in _newItems)
+                        {
+                            ProductDto? prod = Products.FirstOrDefault(p => p.Id == item.ProductId);
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                                <span>@(prod?.Name ?? $"#{item.ProductId}") × @item.Quantity</span>
+                                <button class="btn btn-xs btn-outline-danger" @onclick="() => _newItems.Remove(item)">✕</button>
+                            </li>
+                        }
+                    </ul>
+                }
+                <button class="btn btn-primary w-100" @onclick="CreateOrder">🛒 Place Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detail -->
+    <div class="col-md-7">
+        @if (_selected != null)
+        {
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong>Order #@_selected.Id – @_selected.CustomerName</strong>
+                    <span class="badge @StatusBadge(_selected.Status)">@_selected.Status</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1 text-muted">
+                        Date: @_selected.OrderDate.ToString("yyyy-MM-dd") |
+                        Total: <strong>$@_selected.TotalAmount.ToString("0.00")</strong>
+                    </p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Product</th><th>Qty</th><th>Unit</th><th>Subtotal</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (OrderItemDto item in _selected.OrderItems)
+                            {
+                                <tr>
+                                    <td>@item.ProductName</td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm" style="width:70px"
+                                               value="@item.Quantity"
+                                               @onchange="e => UpdateItemQty(_selected.Id, item.ProductId, int.Parse(e.Value!.ToString()!))" />
+                                    </td>
+                                    <td>$@item.UnitPrice.ToString("0.00")</td>
+                                    <td>$@item.Subtotal.ToString("0.00")</td>
+                                    <td>
+                                        <button class="btn btn-xs btn-outline-danger"
+                                                @onclick="() => RemoveOrderItem(_selected.Id, item.ProductId)">✕</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    @if (_selected.Status == OrderStatus.Pending)
+                    {
+                        <div class="input-group mt-2">
+                            <select class="form-select" @bind="_addProductId">
+                                <option value="0">— add product —</option>
+                                @foreach (ProductDto p in Products)
+                                {
+                                    <option value="@p.Id">@p.Name</option>
+                                }
+                            </select>
+                            <input class="form-control" style="max-width:80px" type="number" min="1" @bind="_addQty" />
+                            <button class="btn btn-outline-primary" @onclick="AddItemToSelected">Add</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card h-100 d-flex align-items-center justify-content-center text-muted p-4">
+                <p>← Click <strong>Details</strong> on an order to inspect and manage its items.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<CustomerDto>                          Customers { get; set; } = default!;
+    [Parameter, EditorRequired] public List<ProductDto>                           Products  { get; set; } = default!;
+    [Parameter, EditorRequired] public EventCallback<(bool IsError, string Msg)> OnStatus  { get; set; }
+
+    private List<OrderDto> _orders  = new();
+    private OrderDto?      _selected;
+    private int            _statusFilter = -1;
+
+    // New order form
+    private int _newCustomerId;
+    private int _newProductId;
+    private int _newQty = 1;
+    private List<CreateOrderItemCommand> _newItems = new();
+
+    // Add item to existing order
+    private int _addProductId;
+    private int _addQty = 1;
+
+    protected override async Task OnInitializedAsync() => await LoadOrders();
+
+    private async Task LoadOrders()
+    {
+        try { _orders = (await Dispatcher.DispatchAsync(new GetAllOrdersQuery())).ToList(); }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task ApplyStatusFilter()
+    {
+        try
+        {
+            _orders = _statusFilter < 0
+                ? (await Dispatcher.DispatchAsync(new GetAllOrdersQuery())).ToList()
+                : (await Dispatcher.DispatchAsync(new GetOrdersByStatusQuery((OrderStatus)_statusFilter))).ToList();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private void AddNewOrderItem()
+    {
+        if (_newProductId == 0 || _newQty < 1) return;
+        _newItems.RemoveAll(i => i.ProductId == _newProductId);
+        _newItems.Add(new CreateOrderItemCommand(_newProductId, _newQty));
+        _newProductId = 0; _newQty = 1;
+    }
+
+    private async Task CreateOrder()
+    {
+        if (_newCustomerId == 0 || _newItems.Count == 0)
+        {
+            await OnStatus.InvokeAsync((true, "Please select a customer and add at least one item."));
+            return;
+        }
+        try
+        {
+            OrderDto created = await Dispatcher.DispatchAsync(new CreateOrderCommand(_newCustomerId, _newItems));
+            await OnStatus.InvokeAsync((false, $"Order #{created.Id} placed for {created.CustomerName}."));
+            _newCustomerId = 0; _newItems.Clear();
+            await LoadOrders();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task SelectOrder(OrderDto o)
+    {
+        try   { _selected = await Dispatcher.DispatchAsync(new GetOrderByIdQuery(o.Id)); }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task ConfirmOrder(int id)
+    {
+        try
+        {
+            await Dispatcher.DispatchAsync(new ConfirmOrderCommand(id));
+            await OnStatus.InvokeAsync((false, $"Order #{id} confirmed."));
+            await LoadOrders();
+            if (_selected?.Id == id) _selected = await Dispatcher.DispatchAsync(new GetOrderByIdQuery(id));
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task CancelOrder(int id)
+    {
+        try
+        {
+            await Dispatcher.DispatchAsync(new CancelOrderCommand(id));
+            await OnStatus.InvokeAsync((false, $"Order #{id} cancelled."));
+            await LoadOrders();
+            if (_selected?.Id == id) _selected = await Dispatcher.DispatchAsync(new GetOrderByIdQuery(id));
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task DeleteOrder(int id)
+    {
+        try
+        {
+            await Dispatcher.DispatchAsync(new DeleteOrderCommand(id));
+            await OnStatus.InvokeAsync((false, $"Order #{id} deleted."));
+            if (_selected?.Id == id) _selected = null;
+            await LoadOrders();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task AddItemToSelected()
+    {
+        if (_selected is null || _addProductId == 0) return;
+        try
+        {
+            _selected = await Dispatcher.DispatchAsync(new AddOrderItemCommand(_selected.Id, _addProductId, _addQty));
+            await OnStatus.InvokeAsync((false, "Item added."));
+            _addProductId = 0; _addQty = 1;
+            await LoadOrders();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task RemoveOrderItem(int orderId, int productId)
+    {
+        try
+        {
+            _selected = await Dispatcher.DispatchAsync(new RemoveOrderItemCommand(orderId, productId));
+            await OnStatus.InvokeAsync((false, "Item removed."));
+            await LoadOrders();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task UpdateItemQty(int orderId, int productId, int newQty)
+    {
+        try
+        {
+            _selected = await Dispatcher.DispatchAsync(new UpdateOrderItemQuantityCommand(orderId, productId, newQty));
+            await OnStatus.InvokeAsync((false, "Quantity updated."));
+            await LoadOrders();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private static string StatusBadge(OrderStatus s) => s switch
+    {
+        OrderStatus.Pending   => "bg-secondary",
+        OrderStatus.Confirmed => "bg-primary",
+        OrderStatus.Shipped   => "bg-info text-dark",
+        OrderStatus.Delivered => "bg-success",
+        OrderStatus.Cancelled => "bg-danger",
+        _                     => "bg-light text-dark"
+    };
+}

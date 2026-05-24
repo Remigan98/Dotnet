@@ -1,0 +1,185 @@
+﻿@using Application.Abstractions
+@using Application.Categories.Dtos
+@using Application.Products.Commands.Create
+@using Application.Products.Commands.Delete
+@using Application.Products.Commands.Update
+@using Application.Products.Dtos
+@using Application.Products.Queries
+
+@inject IDispatcher Dispatcher
+
+<h3>ProductsTab</h3>
+
+<div class="row g-4">
+    <!-- List -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>All Products</strong>
+                <div class="d-flex gap-2 align-items-center">
+                    <select class="form-select form-select-sm" style="width:auto"
+                            @bind="_filterCategoryId" @bind:after="ApplyCategoryFilter">
+                        <option value="0">All categories</option>
+                        @foreach (CategoryDto c in Categories)
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="LoadProducts">↻ Refresh</button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                @if (_products.Count == 0)
+                {
+                    <p class="p-3 text-muted">No products found.</p>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Id</th><th>Name</th><th>Price</th><th>Stock</th><th>CategoryId</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (ProductDto p in _products)
+                            {
+                                <tr>
+                                    <td>@p.Id</td>
+                                    <td>@p.Name</td>
+                                    <td>$@p.Price.ToString("0.00")</td>
+                                    <td>@p.Stock</td>
+                                    <td>@p.CategoryId</td>
+                                    <td>
+                                        <button class="btn btn-xs btn-outline-secondary me-1" @onclick="() => BeginEdit(p)">Edit</button>
+                                        <button class="btn btn-xs btn-outline-danger"         @onclick="() => Delete(p.Id)">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Create / Edit -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <strong>@(_editing == null ? "Create Product" : $"Edit Product #{_editing.Id}")</strong>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label class="form-label">Name</label>
+                    <input class="form-control" @bind="_name" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Price ($)</label>
+                    <input class="form-control" @bind="_price" type="number" step="0.01" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Stock</label>
+                    <input class="form-control" @bind="_stock" type="number" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" @bind="_categoryId">
+                        <option value="0">— select —</option>
+                        @foreach (CategoryDto c in Categories)
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="d-flex gap-2">
+                    @if (_editing == null)
+                    {
+                        <button class="btn btn-primary"   @onclick="Create">+ Create</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-success"   @onclick="Update">💾 Save</button>
+                        <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<CategoryDto>                          Categories { get; set; } = default!;
+    [Parameter, EditorRequired] public EventCallback<(bool IsError, string Msg)> OnStatus   { get; set; }
+
+    private List<ProductDto> _products = new();
+    private ProductDto? _editing;
+    private string  _name             = string.Empty;
+    private decimal _price;
+    private int     _stock;
+    private int     _categoryId;
+    private int     _filterCategoryId;
+
+    protected override async Task OnInitializedAsync() => await LoadProducts();
+
+    private async Task LoadProducts()
+    {
+        try { _products = (await Dispatcher.DispatchAsync(new GetAllProductsQuery())).ToList(); }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task ApplyCategoryFilter()
+    {
+        try
+        {
+            _products = _filterCategoryId == 0
+                ? (await Dispatcher.DispatchAsync(new GetAllProductsQuery())).ToList()
+                : (await Dispatcher.DispatchAsync(new GetProductsByCategoryIdQuery(_filterCategoryId))).ToList();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private async Task Create()
+    {
+        try
+        {
+            ProductDto created = await Dispatcher.DispatchAsync(new CreateProductCommand(_name, _price, _stock, _categoryId));
+            await OnStatus.InvokeAsync((false, $"Product '{created.Name}' created (id={created.Id})."));
+            _name = string.Empty; _price = 0; _stock = 0; _categoryId = 0;
+            await LoadProducts();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private void BeginEdit(ProductDto p)
+    {
+        _editing    = p;
+        _name       = p.Name;
+        _price      = p.Price;
+        _stock      = p.Stock;
+        _categoryId = p.CategoryId;
+    }
+
+    private async Task Update()
+    {
+        if (_editing is null) return;
+        try
+        {
+            ProductDto updated = await Dispatcher.DispatchAsync(
+                new UpdateProductCommand(_editing.Id, _name, _price, _categoryId));
+            await OnStatus.InvokeAsync((false, $"Product #{updated.Id} updated."));
+            CancelEdit();
+            await LoadProducts();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+
+    private void CancelEdit() { _editing = null; _name = string.Empty; _price = 0; _stock = 0; _categoryId = 0; }
+
+    private async Task Delete(int id)
+    {
+        try
+        {
+            await Dispatcher.DispatchAsync(new DeleteProductCommand(id));
+            await OnStatus.InvokeAsync((false, $"Product #{id} deleted."));
+            await LoadProducts();
+        }
+        catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); }
+    }
+}

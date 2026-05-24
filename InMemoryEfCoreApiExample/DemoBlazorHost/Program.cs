@@ -7,15 +7,13 @@ using Infrastructure.Data;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // UI (Blazor)
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 // Backend (DI + InMemory EF Core)
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Host API controllers (from your existing API project) in the same process
-builder.Services.AddControllers()
-    .AddApplicationPart(typeof(CategoriesController).Assembly);
+builder.Services.AddControllers().AddApplicationPart(typeof(CategoriesController).Assembly);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
