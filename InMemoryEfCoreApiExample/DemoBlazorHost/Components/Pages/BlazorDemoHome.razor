@@ -60,13 +60,13 @@
 @code {
     private static readonly string[] _tabs = ["Categories", "Products", "Customers", "Orders"];
 
-    private string _activeTab     = "Categories";
+    private string _activeTab = "Categories";
     private string _statusMessage = string.Empty;
-    private bool   _isError;
+    private bool _isError;
 
     private List<CategoryDto> _categories = new();
-    private List<ProductDto>  _products   = new();
-    private List<CustomerDto> _customers  = new();
+    private List<ProductDto> _products = new();
+    private List<CustomerDto> _customers = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,13 +75,13 @@
 
     private void SetTab(string tab)
     {
-        _activeTab     = tab;
+        _activeTab = tab;
         _statusMessage = string.Empty;
     }
 
     private void HandleStatus((bool IsError, string Msg) status)
     {
-        _isError       = status.IsError;
+        _isError = status.IsError;
         _statusMessage = status.Msg;
     }
 

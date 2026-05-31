@@ -35,7 +35,7 @@
                                     <td>@c.Description</td>
                                     <td>
                                         <button class="btn btn-xs btn-outline-secondary me-1" @onclick="() => BeginEdit(c)">Edit</button>
-                                        <button class="btn btn-xs btn-outline-danger"         @onclick="() => Delete(c.Id)">Delete</button>
+                                        <button class="btn btn-xs btn-outline-danger" @onclick="() => Delete(c.Id)">Delete</button>
                                     </td>
                                 </tr>
                             }
@@ -64,11 +64,11 @@
                 <div class="d-flex gap-2">
                     @if (_editing == null)
                     {
-                        <button class="btn btn-primary"   @onclick="Create">+ Create</button>
+                        <button class="btn btn-primary" @onclick="Create">+ Create</button>
                     }
                     else
                     {
-                        <button class="btn btn-success"   @onclick="Update">💾 Save</button>
+                        <button class="btn btn-success" @onclick="Update">💾 Save</button>
                         <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
                     }
                 </div>
@@ -98,16 +98,16 @@
 </div>
 
 @code {
-    [Parameter, EditorRequired] public List<CategoryDto>                          Categories         { get; set; } = default!;
-    [Parameter, EditorRequired] public EventCallback<(bool IsError, string Msg)> OnStatus           { get; set; }
-    [Parameter, EditorRequired] public EventCallback                              OnCategoriesChanged { get; set; }
+    [Parameter, EditorRequired] public List<CategoryDto> Categories { get; set; } = default!;
+    [Parameter, EditorRequired] public EventCallback<(bool IsError, string Msg)> OnStatus { get; set; }
+    [Parameter, EditorRequired] public EventCallback OnCategoriesChanged { get; set; }
 
     private CategoryDto? _editing;
     private CategoryDto? _lookedUp;
-    private string _name        = string.Empty;
+    private string _name = string.Empty;
     private string _description = string.Empty;
-    private int    _lookupId;
-    private string _lookupName  = string.Empty;
+    private int _lookupId;
+    private string _lookupName = string.Empty;
 
     private async Task LoadCategories()
     {
@@ -133,8 +133,8 @@
 
     private void BeginEdit(CategoryDto c)
     {
-        _editing     = c;
-        _name        = c.Name;
+        _editing = c;
+        _name = c.Name;
         _description = c.Description;
     }
 
@@ -167,13 +167,13 @@
 
     private async Task LookupById()
     {
-        try   { _lookedUp = await Dispatcher.DispatchAsync(new GetCategoryByIdQuery(_lookupId)); }
+        try { _lookedUp = await Dispatcher.DispatchAsync(new GetCategoryByIdQuery(_lookupId)); }
         catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); _lookedUp = null; }
     }
 
     private async Task LookupByName()
     {
-        try   { _lookedUp = await Dispatcher.DispatchAsync(new GetCategoryByName(_lookupName)); }
+        try { _lookedUp = await Dispatcher.DispatchAsync(new GetCategoryByName(_lookupName)); }
         catch (Exception ex) { await OnStatus.InvokeAsync((true, ex.Message)); _lookedUp = null; }
     }
 }

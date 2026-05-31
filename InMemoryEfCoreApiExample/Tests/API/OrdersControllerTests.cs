@@ -318,7 +318,7 @@ namespace Tests.API
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var confirmedOrder = await response.Content.ReadFromJsonAsync<OrderDto>();
+            OrderDto? confirmedOrder = await response.Content.ReadFromJsonAsync<OrderDto>();
             confirmedOrder.Should().NotBeNull();
             confirmedOrder!.Status.Should().Be(OrderStatus.Confirmed);
         }

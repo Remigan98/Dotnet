@@ -18,8 +18,7 @@ namespace Infrastructure
             var applicationAssembly = typeof(IDispatcher).Assembly;
 
             // Register DbContext
-            services.AddDbContext<GroceryDbContext>(options =>
-                options.UseInMemoryDatabase("GroceryDb"));
+            services.AddDbContext<GroceryDbContext>(options => options.UseInMemoryDatabase("GroceryDb"));
 
             // Register Unit of Work
             services.AddScoped<IUnitOfWork, UnitOfWork>();

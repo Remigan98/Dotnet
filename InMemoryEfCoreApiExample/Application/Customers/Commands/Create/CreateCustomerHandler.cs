@@ -11,7 +11,6 @@ namespace Application.Customers.Commands.Create
         private readonly ICustomerRepository _repository;
         private readonly IUnitOfWork _unitOfWork;
 
-
         public CreateCustomerHandler(ICustomerRepository repository, IUnitOfWork unitOfWork)
         {
             this._repository = repository;
@@ -20,6 +19,13 @@ namespace Application.Customers.Commands.Create
 
         public async Task<CustomerDto> Handle(CreateCustomerCommand command, CancellationToken cancellationToken)
         {
+            Customer? shouldBeNull = await _repository.GetByEmailAsync(command.Email, cancellationToken);
+
+            if (shouldBeNull is not null)
+            {
+                throw new ValidationException("A customer with the same email already exists.");
+            }
+
             Customer customer = new Customer
             {
                 FirstName = command.FirstName,
@@ -27,13 +33,6 @@ namespace Application.Customers.Commands.Create
                 Email = command.Email,
                 PhoneNumber = command.PhoneNumber
             };
-
-            Customer? shouldBeNull = await _repository.GetByEmailAsync(command.Email, cancellationToken);
-
-            if (shouldBeNull is not null)
-            {
-                throw new ValidationException("A customer with the same email already exists.");
-            }
 
             await _repository.AddAsync(customer, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
