@@ -10,18 +10,22 @@ namespace Application.Customers.Commands.Create
     {
         private readonly ICustomerRepository _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IValidator<CreateCustomerCommand> _validator;
 
-        public CreateCustomerHandler(ICustomerRepository repository, IUnitOfWork unitOfWork)
+        public CreateCustomerHandler(ICustomerRepository repository, IUnitOfWork unitOfWork, IValidator<CreateCustomerCommand> validator)
         {
             this._repository = repository;
             this._unitOfWork = unitOfWork;
+            this._validator = validator;
         }
 
         public async Task<CustomerDto> Handle(CreateCustomerCommand command, CancellationToken cancellationToken)
         {
-            Customer? shouldBeNull = await _repository.GetByEmailAsync(command.Email, cancellationToken);
+            _validator.Validate(command);
 
-            if (shouldBeNull is not null)
+            Customer? existing = await _repository.GetByEmailAsync(command.Email, cancellationToken);
+
+            if (existing is not null)
             {
                 throw new ValidationException("A customer with the same email already exists.");
             }

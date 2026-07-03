@@ -9,15 +9,19 @@ namespace Application.Customers.Commands.Delete
     {
         private readonly ICustomerRepository _customerRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IValidator<DeleteCustomerCommand> _validator;
 
-        public DeleteCustomerHandler(ICustomerRepository customerRepository, IUnitOfWork unitOfWork)
+        public DeleteCustomerHandler(ICustomerRepository customerRepository, IUnitOfWork unitOfWork, IValidator<DeleteCustomerCommand> validator)
         {
             this._customerRepository = customerRepository;
             this._unitOfWork = unitOfWork;
+            this._validator = validator;
         }
 
         public async Task<bool> Handle(DeleteCustomerCommand command, CancellationToken cancellationToken)
         {
+            _validator.Validate(command);
+
             Customer? customer = await this._customerRepository.GetByIdAsync(command.id, cancellationToken);
 
             if (customer is null)
